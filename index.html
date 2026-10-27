@@ -1,0 +1,1282 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Lumi v2 · 可交互原型</title>
+<style>
+  :root{
+    --brand:#6D5DF6; --brand-deep:#4F3EE8; --brand-soft:#EEEBFE; --brand-ink:#3D2FB8;
+    --pink:#F25CA2; --grad:linear-gradient(135deg,#6D5DF6 0%,#F25CA2 100%);
+    --money:#0B8F6B; --money-soft:#E4F6EF;
+    --warn:#E8890C; --warn-soft:#FDF1DF;
+    --danger:#D93025;
+    --ink:#17181C; --ink2:#5A5C66; --ink3:#9A9BA3;
+    --bg:#F6F7FB; --card:#FFFFFF; --line:#E9EAF2;
+    --r-lg:20px; --r-md:14px; --r-sm:10px;
+  }
+  *{margin:0;padding:0;box-sizing:border-box;-webkit-font-smoothing:antialiased;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,"SF Pro Text","Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",Roboto,"Helvetica Neue",Arial,sans-serif;
+    background:#ECEDF4;color:var(--ink);font-variant-numeric:tabular-nums;overflow:hidden;
+  }
+  button{font-family:inherit;border:none;cursor:pointer;background:none;color:inherit}
+  .stage{min-height:100vh;display:flex;align-items:center;justify-content:center;gap:52px;padding:0}
+  .side{display:none}
+
+  .phone{width:100%;max-width:430px;height:100dvh;background:var(--bg);position:relative;overflow:hidden}
+  .app{position:relative;height:100%;display:flex;flex-direction:column;background:var(--bg)}
+
+  .statusbar{height:54px;flex:none;display:flex;align-items:center;justify-content:space-between;padding:6px 30px 0;font-size:15px;font-weight:700}
+  .sb-r{display:flex;gap:6px;align-items:center}
+  .sb-r svg{display:block}
+  .pages{flex:1;position:relative;overflow:hidden}
+  .page{position:absolute;inset:0;overflow-y:auto;display:none;flex-direction:column;scrollbar-width:none}
+  .page::-webkit-scrollbar{display:none}
+  .page.active{display:flex;animation:fadeUp .26s ease}
+  #app[data-push="1"] .page.active{animation:slideIn .3s cubic-bezier(.22,.8,.3,1)}
+  @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+  @keyframes slideIn{from{opacity:.4;transform:translateX(36px)}to{opacity:1;transform:none}}
+
+  .pb{padding:6px 18px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
+  .appbar{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0}
+  .brandmark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;letter-spacing:-.2px}
+  .brandmark .dot{width:24px;height:24px;border-radius:8px;background:var(--grad)}
+  .shopchip{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:100px;padding:6px 12px}
+  .shopchip i{width:8px;height:8px;border-radius:50%;background:#19C37D;display:inline-block}
+  .shopchip.off i{background:var(--danger)}
+  .pg-title{font-size:24px;letter-spacing:-.4px;padding:2px 2px 0}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r-lg)}
+
+  .tabbar{flex:none;height:82px;background:rgba(255,255,255,.94);border-top:1px solid var(--line);display:flex;align-items:center;padding:8px 10px calc(22px + env(safe-area-inset-bottom));backdrop-filter:blur(10px);transition:transform .3s}
+  #app[data-push="1"] .tabbar{transform:translateY(110%)}
+  .tab{flex:1;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:10.5px;font-weight:600;color:var(--ink3)}
+  .tab.active{color:var(--brand-deep)}
+  .tab svg{display:block}
+
+  .toast{position:absolute;left:50%;transform:translateX(-50%) translateY(16px);bottom:104px;background:#17181C;color:#fff;font-size:13px;font-weight:600;border-radius:100px;padding:10px 18px;opacity:0;pointer-events:none;transition:all .28s;z-index:95;max-width:82%;text-align:center}
+  .toast.on{opacity:1;transform:translateX(-50%) translateY(0)}
+
+  .chips{display:flex;gap:8px;overflow-x:auto;scrollbar-width:none;padding-bottom:2px}
+  .chips::-webkit-scrollbar{display:none}
+  .chip{flex:none;font-size:12.5px;font-weight:600;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:100px;padding:8px 14px;transition:all .15s}
+  .chip.active{background:var(--brand-soft);border-color:var(--brand);color:var(--brand-ink)}
+  .formcard{padding:14px 16px;display:flex;flex-direction:column;gap:13px}
+  .field label{display:block;font-size:11.5px;font-weight:700;color:var(--ink3);margin-bottom:7px}
+  .prod-pick{width:100%;display:flex;align-items:center;gap:11px;background:#F7F8FC;border:1px solid var(--line);border-radius:var(--r-md);padding:9px 11px;text-align:left}
+  .prod-pick img{width:44px;height:44px;border-radius:9px;object-fit:cover;flex:none}
+  .prod-pick b{font-size:14px;display:block}
+  .prod-pick span{font-size:12px;color:var(--ink3);font-weight:600}
+  .prod-pick em{margin-left:auto;font-style:normal;font-size:11.5px;color:var(--brand-deep);font-weight:700;flex:none}
+  .seg{display:flex;gap:8px;flex-wrap:wrap}
+  .seg span{flex:none;font-size:12px;font-weight:600;color:var(--ink2);background:#F4F5FA;border-radius:9px;padding:7px 12px}
+  .seg span.active{background:#17181C;color:#fff}
+  .v2hint{display:flex;gap:7px;align-items:center;font-size:11.5px;font-weight:600;color:var(--brand-ink);background:var(--brand-soft);border-radius:10px;padding:8px 12px}
+  .v2hint::before{content:"✦";color:var(--brand)}
+  .cta{height:52px;border:none;border-radius:16px;background:var(--grad);color:#fff;font-size:16px;font-weight:700;box-shadow:0 10px 22px -8px rgba(109,93,246,.55);transition:transform .12s}
+  .cta:active{transform:scale(.97)}
+  .cta.full{background:var(--warn);box-shadow:0 10px 22px -8px rgba(232,137,12,.5)}
+  .quota{padding:12px 16px;background:#fff;border:1px solid var(--line);border-radius:16px}
+  .quota-top{display:flex;justify-content:space-between;align-items:baseline;font-size:12px;color:var(--ink3);font-weight:600}
+  .quota-top b{font-size:12.5px;color:var(--ink)}
+  .bar{height:6px;border-radius:3px;background:#EEEFF6;margin-top:9px;overflow:hidden}
+  .bar i{display:block;height:100%;border-radius:3px;background:var(--grad);transition:width .4s}
+  .bar i.warn{background:var(--warn)}
+
+  .genhead{padding:10px 20px 0}
+  .genhead h1{font-size:22px;letter-spacing:-.3px}
+  .genhead p{font-size:12.5px;color:var(--ink3);font-weight:600;margin-top:4px}
+  .genlist{padding:20px}
+  .gen-step{display:flex;align-items:center;gap:13px;padding:13px 14px;border-radius:14px;background:#fff;border:1px solid var(--line);margin-bottom:9px;transition:all .3s;opacity:.5}
+  .gen-step.run{opacity:1;border-color:var(--brand);background:var(--brand-soft)}
+  .gen-step.done{opacity:1;background:#fff;border-color:var(--line)}
+  .gen-step.fail{opacity:1;border-color:#F3C1BD;background:#FDF3F2}
+  .gs-ico{width:22px;height:22px;flex:none;border-radius:50%;display:grid;place-items:center;font-size:12px;font-weight:800;color:var(--ink3);background:#F1F2F8}
+  .gen-step.run .gs-ico{background:#fff;color:var(--brand)}
+  .gen-step.done .gs-ico{background:var(--money-soft);color:var(--money)}
+  .gen-step.fail .gs-ico{background:#FBE0DE;color:var(--danger)}
+  .gs-t{font-size:14px;font-weight:600;display:block}
+  .gs-sub{font-size:11.5px;color:var(--ink3);font-weight:600;margin-top:1px;display:block}
+  .gs-spin{width:14px;height:14px;border-radius:50%;border:2px solid #D9D6FB;border-top-color:var(--brand);animation:spin .7s linear infinite}
+  @keyframes spin{to{transform:rotate(360deg)}}
+  .genfail{display:none;flex-direction:column;gap:10px;padding:0 20px 20px}
+  .genfail .card{padding:16px;border-color:#F3C1BD;background:#FDF3F2;border-radius:16px}
+  .genfail b{font-size:14px;color:#B3261E}
+  .genfail p{font-size:12.5px;color:var(--ink2);margin-top:5px;line-height:1.6}
+  .genfail .cta{background:#17181C;box-shadow:none}
+  .gen-note{text-align:center;font-size:11px;color:var(--ink3);font-weight:600;padding-bottom:26px}
+
+  .pushbar{flex:none;display:flex;align-items:center;gap:10px;padding:8px 16px 4px;min-height:52px}
+  .backbtn{width:34px;height:34px;border-radius:50%;background:#fff;border:1px solid var(--line);font-size:19px;line-height:1;display:grid;place-items:center;color:var(--ink)}
+  .pb-t b{display:block;font-size:16.5px;letter-spacing:-.2px}
+  .pb-t span{display:block;font-size:11px;color:var(--ink3);font-weight:600;margin-top:1px}
+
+  .result{position:relative;padding:14px 16px 16px;display:flex;flex-direction:column;gap:12px;border:1.5px solid #DCD6FB;background:linear-gradient(180deg,#FBFAFF 0%,#FFFFFF 60%);margin-top:6px;border-radius:var(--r-lg)}
+  .v2tag{position:absolute;top:-11px;right:14px;font-size:11px;font-weight:800;color:#fff;background:var(--grad);border-radius:100px;padding:4px 12px;letter-spacing:.02em}
+  .postprev{display:flex;gap:12px;align-items:flex-start;background:#fff;border:1px solid var(--line);border-radius:var(--r-md);padding:10px}
+  .postprev img{width:64px;height:64px;border-radius:10px;object-fit:cover;flex:none}
+  .pp-cap{font-size:12px;line-height:1.65;color:#3B3D46;white-space:pre-line}
+  .pp-cap b{display:block;font-size:12.5px;color:var(--ink);margin-bottom:2px}
+  .storyprev{display:flex;gap:10px;align-items:center;background:#17181C;border-radius:var(--r-md);padding:9px 12px;color:#fff}
+  .storyprev .ring{width:40px;height:40px;border-radius:50%;border:2.5px solid var(--pink);padding:2.5px;flex:none}
+  .storyprev .ring img{width:100%;height:100%;border-radius:50%;object-fit:cover}
+  .storyprev .st-t b{font-size:11.5px;display:block}
+  .storyprev .st-t span{font-size:10.5px;opacity:.7;font-weight:600}
+  .storyprev .stlink{margin-left:auto;flex:none;font-size:10px;font-weight:800;background:rgba(255,255,255,.18);border-radius:100px;padding:3px 9px}
+  .tracklist{list-style:none;display:flex;flex-direction:column;gap:10px}
+  .tracklist li{display:flex;gap:10px;align-items:flex-start}
+  .tracklist .ck{flex:none;width:18px;height:18px;border-radius:50%;background:var(--money-soft);color:var(--money);font-size:11px;font-weight:800;display:grid;place-items:center;margin-top:1px}
+  .tracklist b{display:block;font-size:12.5px}
+  .tracklist span{display:block;font-size:11.5px;color:var(--ink3);margin-top:1px;font-weight:600}
+  .tracklist .tl{flex:1}
+  .tracklist .cp{margin-left:auto;flex:none;font-size:10.5px;font-weight:800;color:var(--brand-deep);background:var(--brand-soft);border-radius:100px;padding:3px 9px}
+  .btnrow{display:flex;gap:10px}
+  .btn-ghost{flex:1;height:42px;border-radius:12px;border:1.5px solid var(--line);background:#fff;font-size:13.5px;font-weight:700;color:var(--ink2)}
+  .btn-solid{flex:1.4;height:42px;border-radius:12px;border:none;background:#17181C;color:#fff;font-size:13.5px;font-weight:700}
+  .rnote{font-size:11.5px;color:var(--ink3);text-align:center;font-weight:600;padding:0 4px 6px}
+
+  .pubwrap{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:10px 24px 24px;gap:14px;text-align:center}
+  .pubck{width:74px;height:74px;border-radius:50%;background:var(--money-soft);color:var(--money);font-size:34px;font-weight:800;display:grid;place-items:center}
+  .pubwrap h1{font-size:22px;letter-spacing:-.3px}
+  .publist{background:#fff;border:1px solid var(--line);border-radius:16px;padding:14px 16px;text-align:left;width:100%;display:flex;flex-direction:column;gap:8px;list-style:none}
+  .publist li{display:flex;gap:9px;font-size:12.5px;font-weight:600;color:#3B3D46}
+  .publist .ck{color:var(--money);font-weight:800}
+  .pubmini{display:flex;gap:11px;align-items:center;background:#fff;border:1px solid var(--line);border-radius:14px;padding:10px;width:100%;text-align:left}
+  .pubmini img{width:44px;height:44px;border-radius:10px;object-fit:cover}
+  .pubmini b{font-size:13px;display:block}
+  .pubmini span{font-size:11.5px;color:var(--ink3);font-weight:600}
+  .pubnote{font-size:11.5px;color:var(--ink3);line-height:1.7;font-weight:600;padding:0 8px}
+  .pubbtns{width:100%;display:flex;flex-direction:column;gap:9px;margin-top:4px}
+  .pubbtns .cta{width:100%}
+  .btn-ghost.wide{width:100%;height:42px}
+
+  .rs-wrap{padding:6px 18px 24px;display:flex;flex-direction:column;gap:12px}
+  .dashhead{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0}
+  .dashhead h1{font-size:24px;letter-spacing:-.4px}
+  .chatsm{flex:none;display:flex;align-items:center;gap:5px;background:var(--grad);color:#fff;font-size:12px;font-weight:800;border-radius:100px;padding:8px 14px;box-shadow:0 6px 14px -4px rgba(109,93,246,.5)}
+  .sync{font-size:11.5px;color:var(--ink3);font-weight:600;padding:0 2px}
+  .sync.bad{color:var(--danger)}
+  .igbanner{display:flex;align-items:center;gap:10px;background:var(--warn-soft);border:1px solid #F3DFBC;border-radius:14px;padding:11px 13px;font-size:12px;font-weight:600;color:#8A5A0B;line-height:1.5}
+  .igbanner button{flex:none;font-size:11.5px;font-weight:800;color:#fff;background:var(--warn);border-radius:100px;padding:6px 12px}
+  .hero{border:none;border-radius:var(--r-lg);background:var(--grad);color:#fff;padding:18px 20px 20px;position:relative;overflow:hidden}
+  .hero::after{content:"";position:absolute;right:-42px;top:-42px;width:150px;height:150px;border-radius:50%;background:rgba(255,255,255,.14)}
+  .hero-label{font-size:12px;font-weight:600;opacity:.85}
+  .hero-money{font-size:44px;font-weight:800;letter-spacing:-1.2px;line-height:1.15;margin-top:4px}
+  .hero-sub{display:flex;align-items:center;gap:10px;margin-top:8px;font-size:12px;font-weight:600;flex-wrap:wrap}
+  .hero-pill{background:rgba(255,255,255,.22);border-radius:100px;padding:4px 12px}
+  .metrics{display:flex;gap:10px}
+  .mcell{flex:1;background:#fff;border:1px solid var(--line);border-radius:16px;padding:12px 0;text-align:center}
+  .mcell span{display:block;font-size:11.5px;color:var(--ink3);font-weight:600}
+  .mcell b{display:block;font-size:19px;margin-top:3px;letter-spacing:-.3px}
+  .mcell b.dim{color:var(--ink3);font-size:15px}
+  .insight{padding:13px 16px;border:1.5px solid #DCD6FB;background:linear-gradient(180deg,#FBFAFF,#FFF)}
+  .ins-head{font-size:11px;font-weight:800;color:var(--brand-ink);letter-spacing:.06em;margin-bottom:5px}
+  .insight p{font-size:12.5px;line-height:1.65;color:#3B3D46}
+  .insight p b{color:var(--ink)}
+  .ins-ctas{display:flex;gap:9px;margin-top:10px;flex-wrap:wrap}
+  .ins-btn{font-size:12px;font-weight:800;color:#fff;background:var(--brand-deep);border-radius:100px;padding:8px 14px}
+  .ins-btn.alt{background:var(--brand-soft);color:var(--brand-ink)}
+  .weekhead{display:flex;justify-content:space-between;font-size:12px;font-weight:800;margin:2px 2px 0}
+  .weekhead span{color:var(--ink3);font-weight:600}
+  .pcard{padding:14px 16px;display:flex;flex-direction:column;gap:10px}
+  .pc-top{display:flex;gap:11px;align-items:flex-start}
+  .pc-top img{width:46px;height:46px;border-radius:12px;object-fit:cover;flex:none}
+  .pc-title{font-size:13.5px;font-weight:700;line-height:1.35}
+  .pc-meta{font-size:11px;color:var(--ink3);margin-top:3px;font-weight:600}
+  .pc-badge{margin-left:auto;flex:none;font-size:10.5px;font-weight:800;color:var(--money);background:var(--money-soft);border-radius:100px;padding:4px 10px}
+  .pc-badge.new{color:var(--brand-ink);background:var(--brand-soft)}
+  .pc-badge.low{color:var(--ink3);background:#F1F2F8}
+  .pc-badge.pend{color:var(--warn);background:var(--warn-soft)}
+  .pc-stats{display:flex;gap:14px;font-size:11.5px;color:var(--ink2);font-weight:600;flex-wrap:wrap}
+  .pc-money{display:flex;align-items:center;gap:8px;background:var(--money-soft);border-radius:12px;padding:9px 12px;font-size:13px;color:var(--money);font-weight:700;flex-wrap:wrap}
+  .pc-money b{font-size:15px}
+  .pc-money .code{margin-left:auto;font-size:10.5px;font-weight:700;color:#0B7A5D;opacity:.85}
+  .pending-card{display:flex;align-items:center;gap:10px;background:linear-gradient(100deg,#FFF8F0 30%,#FDF1DF 50%,#FFF8F0 70%);background-size:200% 100%;animation:shimmer 1.6s linear infinite;border:1px solid #F3DFBC;border-radius:12px;padding:10px 12px;font-size:12px;font-weight:700;color:#8A5A0B}
+  .pending-card button{flex:none;font-size:11px;font-weight:800;color:#fff;background:var(--warn);border-radius:100px;padding:5px 10px}
+  @keyframes shimmer{to{background-position:-200% 0}}
+  .footnote{font-size:10.5px;color:var(--ink3);line-height:1.65;padding:0 4px}
+
+  .dt-wrap{padding:6px 18px 24px;display:flex;flex-direction:column;gap:12px}
+  .dt-head{padding:15px 16px;display:flex;gap:12px;align-items:center}
+  .dt-head img{width:56px;height:56px;border-radius:14px;object-fit:cover;flex:none}
+  .dt-money{border:none;background:var(--money);color:#fff;border-radius:var(--r-lg);padding:16px 20px;display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+  .dt-money b{font-size:32px;font-weight:800;letter-spacing:-.8px}
+  .dt-money span{font-size:13px;font-weight:700;opacity:.92}
+  .dt-money em{margin-left:auto;font-style:normal;font-size:11px;font-weight:700;background:rgba(255,255,255,.2);border-radius:100px;padding:4px 10px;align-self:center}
+  .funnel{padding:15px 16px;display:flex;flex-direction:column;gap:12px}
+  .fn-row{display:flex;flex-direction:column;gap:5px}
+  .fn-top{display:flex;align-items:baseline;gap:8px;font-size:12.5px;font-weight:700;flex-wrap:wrap}
+  .fn-top b{font-size:15px}
+  .fn-top .pct{color:var(--money);font-size:11.5px;font-weight:800}
+  .fn-top .src{margin-left:auto;font-size:10px;font-weight:700;color:var(--ink3);background:#F4F5FA;border-radius:100px;padding:3px 8px}
+  .fn-bar{height:8px;border-radius:4px;background:#F1F2F8;overflow:hidden}
+  .fn-bar i{display:block;height:100%;border-radius:4px;background:var(--grad);min-width:4%}
+  .fn-divider{display:flex;align-items:center;gap:8px;color:var(--money)}
+  .fn-divider::before,.fn-divider::after{content:"";flex:1;height:1px;background:var(--line)}
+  .fn-divider span{font-size:10.5px;font-weight:800}
+  .attr{padding:14px 16px;display:flex;flex-direction:column;gap:9px}
+  .attr-row{display:flex;justify-content:space-between;font-size:12.5px;font-weight:600;color:#3B3D46}
+  .attr-row b{color:var(--ink)}
+  .sparkcard{padding:14px 16px}
+  .sparkcard .sc-t{font-size:11.5px;font-weight:800;color:var(--ink3);margin-bottom:8px}
+  .spark{width:100%;height:64px;display:block}
+  .dtbtns{display:flex;gap:10px}
+  .dtbtns .btn-solid{flex:1.3}
+  .dtbtns .btn-ghost{flex:1}
+
+  .chat-log{flex:1;overflow-y:auto;padding:14px 16px 20px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+  .chat-log::-webkit-scrollbar{display:none}
+  .msg{max-width:86%;padding:11px 14px;border-radius:18px;font-size:13.5px;line-height:1.6}
+  .msg.user{align-self:flex-end;background:var(--brand);color:#fff;border-bottom-right-radius:5px}
+  .msg.ai{align-self:flex-start;background:#fff;border:1px solid var(--line);border-bottom-left-radius:5px;max-width:92%}
+  .msg.ai .meta{display:flex;align-items:center;gap:6px;font-size:10.5px;color:var(--brand-ink);background:var(--brand-soft);border-radius:100px;padding:4px 10px;margin-bottom:8px;font-weight:800;width:fit-content}
+  .msg.ai .body{white-space:pre-line;color:#3B3D46}
+  .msg.ai .body b{color:var(--ink)}
+  .qchips{display:flex;flex-direction:column;gap:8px;margin-top:10px}
+  .qchip{text-align:left;font-size:12px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);border-radius:100px;padding:8px 13px;width:fit-content}
+  .chat-card{margin-top:9px;border:1px solid var(--line);border-radius:14px;overflow:hidden}
+  .chat-card .cc-row{display:flex;gap:10px;align-items:center;padding:10px 12px}
+  .chat-card img{width:42px;height:42px;border-radius:9px;object-fit:cover}
+  .chat-card b{font-size:12.5px;display:block}
+  .chat-card span{font-size:11px;color:var(--money);font-weight:800}
+  .chat-card .cap{font-size:12px;color:#3B3D46;line-height:1.6;padding:10px 12px;background:#FAFBFE;white-space:pre-line}
+  .chat-card .caplabel{font-size:10px;font-weight:800;color:var(--ink3);letter-spacing:.05em;padding:9px 12px 0}
+  .chat-cta{display:inline-block;margin-top:9px;font-size:12px;font-weight:800;color:#fff;background:var(--brand-deep);border-radius:100px;padding:8px 14px}
+  .typing{align-self:flex-start;background:#fff;border:1px solid var(--line);border-radius:18px;border-bottom-left-radius:5px;padding:13px 15px;display:flex;gap:5px}
+  .typing i{width:7px;height:7px;border-radius:50%;background:#C9CBE0;animation:tp 1s infinite}
+  .typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+  @keyframes tp{0%,60%,100%{transform:none;opacity:.5}30%{transform:translateY(-4px);opacity:1}}
+  .chat-input{flex:none;display:flex;gap:9px;padding:10px 14px calc(16px + env(safe-area-inset-bottom));background:#fff;border-top:1px solid var(--line)}
+  .chat-input input{flex:1;height:44px;border-radius:22px;border:1.5px solid var(--line);background:#F7F8FC;padding:0 18px;font-size:14px;outline:none;font-family:inherit}
+  .chat-input input:focus{border-color:var(--brand)}
+  .sendbtn{width:44px;height:44px;border-radius:50%;background:var(--grad);color:#fff;font-size:18px;display:grid;place-items:center}
+
+  .pf-wrap{padding:6px 18px 26px;display:flex;flex-direction:column;gap:12px}
+  .acard{padding:18px 16px;display:flex;gap:13px;align-items:center}
+  .avatar{width:52px;height:52px;border-radius:50%;background:var(--grad);color:#fff;font-size:20px;font-weight:800;display:grid;place-items:center;flex:none}
+  .acard b{font-size:16px;display:block;letter-spacing:-.2px}
+  .acard span{font-size:12px;color:var(--ink3);font-weight:600;display:block;margin-top:2px}
+  .planbadge{margin-left:auto;font-size:11px;font-weight:800;border-radius:100px;padding:5px 11px;background:var(--brand-soft);color:var(--brand-ink)}
+  .planbadge.pro{background:var(--grad);color:#fff}
+  .plancard{padding:15px 16px;display:flex;flex-direction:column;gap:11px}
+  .pl-top{display:flex;justify-content:space-between;align-items:center}
+  .pl-top b{font-size:14px}
+  .pl-top span{font-size:12px;color:var(--ink3);font-weight:700}
+  .plancard .cta{height:46px;font-size:15px}
+  .pfrow{padding:14px 16px;display:flex;align-items:center;gap:11px}
+  .pfrow .ico{width:36px;height:36px;border-radius:11px;display:grid;place-items:center;font-size:16px;background:#F4F5FA;flex:none}
+  .pfrow b{font-size:13.5px;display:block}
+  .pfrow span{font-size:11.5px;color:var(--ink3);font-weight:600;display:block;margin-top:1px}
+  .pfrow .go{margin-left:auto;font-size:12px;font-weight:800;color:var(--brand-deep);flex:none}
+  .sect{font-size:11px;font-weight:800;color:var(--ink3);letter-spacing:.1em;padding:4px 4px 0}
+  .demo-grid{display:flex;flex-direction:column;gap:9px;padding:14px 16px}
+  .demobtn{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:700;color:#3B3D46;background:#F7F8FC;border:1px dashed #D5D8E6;border-radius:12px;padding:11px 13px;text-align:left}
+  .demobtn i{font-style:normal;flex:none}
+  .pf-note{font-size:10.5px;color:var(--ink3);line-height:1.65;text-align:center;padding:0 6px}
+
+  .banner{display:flex;align-items:center;gap:10px;background:var(--warn-soft);border:1px solid #F3DFBC;border-radius:14px;padding:11px 14px;font-size:12px;font-weight:700;color:#8A5A0B}
+  .banner i{flex:none;width:18px;height:18px;border-radius:50%;background:var(--warn);color:#fff;display:grid;place-items:center;font-size:11px;font-style:normal}
+  .banner span{margin-left:auto;color:#A9741F;font-weight:800}
+  .recap{border:none;border-radius:var(--r-lg);background:var(--grad);color:#fff;padding:18px 20px;position:relative;overflow:hidden}
+  .recap::after{content:"";position:absolute;right:-36px;bottom:-52px;width:160px;height:160px;border-radius:50%;background:rgba(255,255,255,.14)}
+  .recap .rlabel{font-size:12px;font-weight:600;opacity:.85}
+  .recap .rmoney{display:flex;align-items:baseline;gap:10px;margin-top:4px}
+  .recap .rmoney b{font-size:34px;font-weight:800;letter-spacing:-.8px}
+  .recap .rmoney span{font-size:13px;font-weight:700;opacity:.9}
+  .recap .rline{font-size:11.5px;opacity:.85;margin-top:8px;font-weight:600}
+  #pwBody{height:100%;display:flex;flex-direction:column}
+  .pw-scroll{flex:1;overflow-y:auto;padding:4px 18px 18px;display:flex;flex-direction:column;gap:12px;scrollbar-width:none}
+  .pw-scroll::-webkit-scrollbar{display:none}
+  .pw-sticky{flex:none;padding:14px 18px calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,rgba(246,247,251,0) 0%,#F6F7FB 26%)}
+  .pw-sticky .cta-up{width:100%}
+  .pw-trust{margin-top:8px;font-size:10.5px;color:var(--ink3);text-align:center;font-weight:600;line-height:1.5}
+  .pw-sec{font-size:11px;font-weight:800;color:var(--ink3);letter-spacing:.1em;padding:2px 2px 0}
+  .optlist{display:flex;flex-direction:column;gap:9px}
+  .opt{position:relative;display:flex;align-items:center;gap:11px;width:100%;text-align:left;background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:12px 14px;transition:all .15s}
+  .opt.sel{border-color:var(--brand);background:var(--brand-soft);box-shadow:0 10px 22px -14px rgba(109,93,246,.4)}
+  .o-rad{flex:none;width:20px;height:20px;border-radius:50%;border:2px solid #D5D8E6;display:grid;place-items:center}
+  .opt.sel .o-rad{border-color:var(--brand)}
+  .o-rad i{width:10px;height:10px;border-radius:50%;background:var(--grad);transform:scale(0);transition:transform .18s}
+  .opt.sel .o-rad i{transform:scale(1)}
+  .o-main{flex:1;min-width:0}
+  .o-main b{font-size:15px;display:block;letter-spacing:-.2px}
+  .o-main span{font-size:11.5px;color:var(--ink3);font-weight:600;display:block;margin-top:1px}
+  .o-price{flex:none;text-align:right}
+  .o-price b{font-size:16px;display:block}
+  .o-price span{font-size:10.5px;color:var(--ink3);font-weight:700}
+  .o-tag{position:absolute;top:-9px;right:12px;font-size:10px;font-weight:800;color:#fff;background:var(--brand);border-radius:100px;padding:2px 9px}
+  .o-tag.cur{background:var(--ink3)}
+  .sel-feats{padding:14px 16px}
+  .sel-feats .sf-t{font-size:11px;font-weight:800;color:var(--ink3);letter-spacing:.08em;margin-bottom:9px}
+  .sf-row{display:flex;gap:9px;font-size:12.5px;font-weight:600;color:#3B3D46;line-height:1.55;margin-bottom:7px}
+  .sf-row i{color:var(--money);font-style:normal;font-weight:800;flex:none}
+  .cta-up.ghost{background:#fff;color:var(--ink2);border:1.5px solid var(--line);box-shadow:none}
+  .cta-up{height:54px;border:none;border-radius:16px;background:var(--grad);color:#fff;font-size:16px;font-weight:800;box-shadow:0 12px 26px -10px rgba(109,93,246,.55)}
+  .cta-up:active{transform:scale(.98)}
+  .cta-up.paying{background:#17181C;box-shadow:none}
+  .fine{font-size:10.5px;color:var(--ink3);text-align:center;line-height:1.7}
+  .pw-success{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:30px}
+
+  .coach{display:flex;align-items:center;gap:10px;background:var(--brand-soft);border:1px solid #DCD6FB;border-radius:14px;padding:11px 13px}
+  .coach.hidden{display:none}
+  .coach .c-txt{flex:1;font-size:12px;font-weight:600;color:var(--brand-ink);line-height:1.6}
+  .coach .c-txt b{font-weight:800}
+  .coach .c-more{flex:none;font-size:11.5px;font-weight:800;color:#fff;background:var(--brand-deep);border-radius:100px;padding:6px 11px}
+  .coach .c-x{flex:none;width:24px;height:24px;border-radius:50%;display:grid;place-items:center;font-size:11px;color:var(--ink3);background:#fff}
+  .pw-success .pubck{width:84px;height:84px;font-size:40px}
+  .pw-success h1{font-size:24px;letter-spacing:-.3px}
+  .pw-success p{font-size:13.5px;color:var(--ink2);font-weight:600;line-height:1.7}
+
+  .backdrop{position:absolute;inset:0;background:rgba(23,24,28,.45);opacity:0;pointer-events:none;transition:opacity .25s;z-index:70}
+  .backdrop.on{opacity:1;pointer-events:auto}
+  .sheet{position:absolute;left:0;right:0;bottom:0;background:#fff;border-radius:26px 26px 0 0;padding:10px 18px calc(24px + env(safe-area-inset-bottom));transform:translateY(105%);transition:transform .32s cubic-bezier(.22,.8,.3,1);z-index:80;max-height:76%;overflow-y:auto}
+  .sheet.on{transform:none}
+  .sh-grip{width:40px;height:4.5px;border-radius:3px;background:#DDDFEA;margin:4px auto 14px}
+  .sh-title{font-size:17px;font-weight:800;letter-spacing:-.2px}
+  .sh-sub{font-size:12px;color:var(--ink3);font-weight:600;margin-top:3px;line-height:1.6}
+  .sh-reason{display:flex;gap:9px;font-size:12px;font-weight:700;color:var(--brand-ink);background:var(--brand-soft);border-radius:12px;padding:10px 13px;margin-top:12px;line-height:1.55}
+  .sh-list{display:flex;flex-direction:column;gap:8px;margin-top:12px}
+  .sh-item{display:flex;gap:11px;align-items:center;background:#F7F8FC;border:1px solid var(--line);border-radius:14px;padding:10px 12px;width:100%;text-align:left}
+  .sh-item img{width:42px;height:42px;border-radius:9px;object-fit:cover}
+  .sh-item b{font-size:13px;display:block}
+  .sh-item span{font-size:11.5px;color:var(--ink3);font-weight:700}
+  .sh-item em{font-style:normal;margin-left:auto;font-size:12px;font-weight:800;color:var(--ink)}
+  .sh-item .sel{margin-left:auto;color:var(--brand-deep);font-weight:800;font-size:14px}
+  .scope-list{display:flex;flex-direction:column;gap:9px;margin-top:12px}
+  .scope{display:flex;gap:9px;font-size:12.5px;font-weight:600;color:#3B3D46;line-height:1.55}
+  .scope i{color:var(--money);font-style:normal;font-weight:800;flex:none}
+  .sh-note{font-size:10.5px;color:var(--ink3);margin-top:10px;line-height:1.6}
+  .sheet .cta{width:100%;margin-top:14px}
+  .sheet .btn-ghost.wide{width:100%;margin-top:9px;flex:none}
+
+  .guide{position:absolute;inset:0;background:rgba(16,16,20,.6);backdrop-filter:blur(6px);display:flex;align-items:flex-end;justify-content:center;z-index:90;opacity:0;pointer-events:none;transition:opacity .3s}
+  .guide.on{opacity:1;pointer-events:auto}
+  .guide-card{width:100%;max-width:430px;background:#fff;border-radius:26px 26px 0 0;padding:24px 22px calc(30px + env(safe-area-inset-bottom));transform:translateY(30px);transition:transform .35s cubic-bezier(.22,.8,.3,1);max-height:88%;overflow-y:auto}
+  .guide.on .guide-card{transform:none}
+  .g-eyebrow{display:inline-block;font-size:11px;font-weight:800;color:#fff;background:var(--grad);border-radius:100px;padding:5px 12px;letter-spacing:.03em}
+  .g-quote{margin-top:14px;font-size:15.5px;font-weight:700;line-height:1.6;color:var(--ink)}
+  .g-quote span{display:block;margin-top:5px;font-size:11.5px;color:var(--ink3);font-weight:600}
+  .g-h{font-size:11.5px;font-weight:800;color:var(--ink3);letter-spacing:.1em;margin:18px 0 9px}
+  .loop{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .lp{display:flex;flex-direction:column;gap:2px;background:#F7F8FC;border:1px solid var(--line);border-radius:12px;padding:8px 11px;font-size:12px;font-weight:800}
+  .lp em{font-style:normal;font-size:9.5px;color:var(--ink3);font-weight:600}
+  .lp i{font-style:normal;color:var(--brand-deep);font-size:10px}
+  .loop .arr{color:var(--ink3);font-weight:800}
+  .ms-list{display:flex;flex-direction:column;gap:8px}
+  .ms{display:flex;align-items:center;gap:10px;font-size:13px;font-weight:600;color:var(--ink2)}
+  .ms-ck{flex:none;width:21px;height:21px;border-radius:50%;border:1.5px solid #D5D8E6;display:grid;place-items:center;font-size:11px;font-weight:800;color:#fff;background:transparent;transition:all .3s}
+  .ms.done{color:var(--ink)}
+  .ms.done .ms-ck{background:var(--money);border-color:var(--money)}
+  .g-tip{margin-top:14px;font-size:11.5px;color:var(--ink3);line-height:1.7;background:#F7F8FC;border-radius:12px;padding:10px 13px;font-weight:600}
+  .guide-card .cta{width:100%;margin-top:16px}
+
+  @media(min-width:960px){
+    body{background:radial-gradient(1200px 800px at 70% -10%,#E9E4FB 0%,#ECEDF4 55%)}
+    .stage{padding:36px 24px}
+    .side{display:block;width:370px;flex:none;max-height:92vh;overflow-y:auto}
+    .side-inner{display:flex;flex-direction:column;gap:18px}
+    .side .g-quote{font-size:19px}
+    .phone{width:390px;height:min(844px,calc(100dvh - 72px));max-width:none;border-radius:54px;background:#101014;padding:12px;box-shadow:0 30px 60px -18px rgba(23,24,28,.35),0 0 0 1px rgba(255,255,255,.08) inset;border:1px solid #2A2B33}
+    .app{border-radius:42px;overflow:hidden}
+    .side .foot-hint{font-size:12px;color:var(--ink3);line-height:1.8;font-weight:600}
+    .side .foot-hint b{color:var(--ink)}
+    .state-list .ms{font-size:12.5px}
+    .state-list .ms-ck{background:var(--brand-soft);border-color:var(--brand-soft);color:var(--brand-ink)}
+  }
+</style>
+</head>
+<body>
+<div class="stage">
+
+  <aside class="side">
+    <div class="side-inner">
+      <div>
+        <span class="g-eyebrow">Lumi v2 · 可交互原型</span>
+        <div class="g-quote">「贴文发了，订单也来了——<br>但两者之间，一片漆黑。」<span>—— Maria，手工耳环店主（演示用户）</span></div>
+      </div>
+      <div>
+        <div class="g-h">v2 解决方案 · 效果闭环</div>
+        <div class="loop">
+          <span class="lp"><i>① 生成</i>自动埋好追踪<em>短链 · bio · Story · 优惠码</em></span><span class="arr">→</span>
+          <span class="lp"><i>② 发布</i>一键到 Instagram<em>bio 链接自动更新</em></span><span class="arr">→</span>
+          <span class="lp"><i>③ 看效果</i>订单归因到每条贴文<em>钱放最大字号</em></span><span class="arr">→</span>
+          <span class="lp"><i>④ 再优化</i>数据反哺生成<em>建议一键预填</em></span>
+        </div>
+      </div>
+      <div>
+        <div class="g-h">演示动线（完成后自动打勾）</div>
+        <div class="ms-list" id="msSide"></div>
+      </div>
+      <div>
+        <div class="g-h">覆盖的边界状态</div>
+        <div class="state-list ms-list">
+          <div class="ms"><span class="ms-ck">a</span>生成 6 步可视化 · AI 异常 → 失败重试（不扣额度）</div>
+          <div class="ms"><span class="ms-ck">b</span>发布后数据回传中 · 24h 快进（标注「演示」）</div>
+          <div class="ms"><span class="ms-ck">c</span>IG 未授权 → 点击/订单仍可统计，曝光不可见</div>
+          <div class="ms"><span class="ms-ck">d</span>额度用尽 → 付费墙（价值先行）→ Pro 300 次</div>
+        </div>
+      </div>
+      <div class="foot-hint"><b>提示：</b>所有「⏩」按钮均为演示快进，真实产品不存在；完整演示指引与快进入口在手机端「我的」页。数据全部为 Maria's Jewelry 的 mock。</div>
+    </div>
+  </aside>
+
+  <div class="phone">
+    <div class="app" id="app" data-push="0" data-tab="create">
+      <div class="statusbar"><span>9:41</span>
+        <div class="sb-r">
+          <svg width="18" height="12" viewBox="0 0 18 12"><g fill="#17181C"><rect x="0" y="7" width="3" height="5" rx="1"/><rect x="5" y="4.5" width="3" height="7.5" rx="1"/><rect x="10" y="2" width="3" height="10" rx="1"/><rect x="15" y="0" width="3" height="12" rx="1"/></g></svg>
+          <svg width="16" height="12" viewBox="0 0 16 12"><path d="M8 11.5 1 4.8A9.6 9.6 0 0 1 15 4.8Z" fill="#17181C"/></svg>
+          <svg width="26" height="13" viewBox="0 0 26 13"><rect x="0" y="0" width="22" height="13" rx="4" fill="none" stroke="#17181C" stroke-opacity=".35"/><rect x="2" y="2" width="15" height="9" rx="2" fill="#17181C"/><rect x="23" y="4" width="3" height="5" rx="1" fill="#17181C" fill-opacity=".35"/></svg>
+        </div>
+      </div>
+
+      <div class="pages">
+
+        <section class="page active" id="page-create">
+          <div class="pb">
+            <div class="appbar">
+              <div class="brandmark"><span class="dot"></span>Lumi</div>
+              <button class="shopchip" id="shopChip" data-action="ig-manage"><i></i><span id="shopChipTxt"></span></button>
+            </div>
+            <h1 class="pg-title">创建贴文</h1>
+            <div class="coach" id="coach">
+              <div class="c-txt"><b>第一次来？</b>三步跑通效果闭环：生成 → 发布 → 看效果，每条贴文自动埋好追踪、订单自动归因。</div>
+              <button class="c-more" data-action="open-guide">看指引</button>
+              <button class="c-x" data-action="dismiss-coach" aria-label="不再提示">✕</button>
+            </div>
+            <div class="chips" id="tplChips"></div>
+            <div class="card formcard">
+              <div class="field"><label>商品</label>
+                <button class="prod-pick" id="prodPick" data-action="open-products"></button>
+              </div>
+              <div class="field"><label>语气</label>
+                <div class="seg" id="toneSeg"></div>
+              </div>
+            </div>
+            <div class="v2hint">v2 · 每条贴文自动埋好追踪：短链 · IG bio · Story · 优惠码</div>
+            <button class="cta" id="ctaGen" data-action="generate">生成贴文</button>
+            <div class="quota" id="quotaCard"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-results">
+          <div class="rs-wrap">
+            <div class="dashhead">
+              <h1>效果</h1>
+              <button class="chatsm" data-action="open-chat" title="Lumi 助手">✦ 问助手</button>
+            </div>
+            <div class="sync" id="syncLine"></div>
+            <div id="rsBody"></div>
+          </div>
+        </section>
+
+        <section class="page" id="page-profile">
+          <div class="pf-wrap">
+            <div class="sect" style="margin-bottom:-4px">账户</div>
+            <div class="card acard">
+              <div class="avatar">M</div>
+              <div><b>Maria's Jewelry</b><span>@mariasjewelry · 手工首饰小店</span></div>
+              <span class="planbadge" id="planBadge">Free</span>
+            </div>
+            <div class="sect">方案与用量</div>
+            <div class="card plancard" id="planCard"></div>
+            <div class="sect">连接</div>
+            <div class="card pfrow" id="igCard"></div>
+            <div class="sect">演示控制（评委快进用）</div>
+            <div class="card demo-grid">
+              <button class="demobtn" data-action="open-guide"><i>📖</i>完整演示指引（效果闭环 · 演示动线）</button>
+              <button class="demobtn" data-action="demo-quota"><i>⏩</i>快进：额度用完 → 直接体验付费墙</button>
+              <button class="demobtn" data-action="demo-fail"><i>⚠️</i>下次生成模拟失败（验证 AI 异常处理）</button>
+              <button class="demobtn" data-action="demo-ig"><i>🔌</i>断开 IG 连接（验证未授权状态）</button>
+              <button class="demobtn" data-action="demo-reset"><i>↺</i>重置演示</button>
+            </div>
+            <div class="pf-note">Lumi v2 · Part B 可交互原型 · 所有数据为 mock<br>真实产品中，额度校验与事件上报发生在服务端</div>
+          </div>
+        </section>
+
+        <section class="page" id="page-generate">
+          <div class="genhead">
+            <h1>正在生成…</h1>
+            <p>v2 · 发布前自动埋好效果追踪</p>
+          </div>
+          <div class="genlist" id="genList"></div>
+          <div class="genfail" id="genFail">
+            <div class="card">
+              <b>生成超时（AI 服务无响应）</b>
+              <p>本次<b>未消耗额度</b>——失败不扣次数，重试即可。这是文档定义的异常规则之一。</p>
+            </div>
+            <button class="cta" data-action="retry-gen">重试生成</button>
+          </div>
+          <div class="gen-note" id="genNote">演示：约 3 秒完成</div>
+        </section>
+
+        <section class="page" id="page-result">
+          <div class="pushbar">
+            <button class="backbtn" data-action="back">‹</button>
+            <div class="pb-t"><b>生成结果</b><span id="resultQuota"></span></div>
+          </div>
+          <div class="pb" id="resultBody" style="padding-top:2px"></div>
+        </section>
+
+        <section class="page" id="page-publish">
+          <div class="pushbar">
+            <button class="backbtn" data-action="back">‹</button>
+            <div class="pb-t"><b>发布</b><span>第 ② 步完成 · 第 ③ 步即将解锁</span></div>
+          </div>
+          <div class="pubwrap" id="pubBody"></div>
+        </section>
+
+        <section class="page" id="page-detail">
+          <div class="pushbar">
+            <button class="backbtn" data-action="back">‹</button>
+            <div class="pb-t"><b>贴文效果</b><span>曝光 → 点击 → 订单 · 完整链路</span></div>
+          </div>
+          <div class="dt-wrap" id="detailBody"></div>
+        </section>
+
+        <section class="page" id="page-chat">
+          <div class="pushbar">
+            <button class="backbtn" data-action="back">‹</button>
+            <div class="pb-t"><b>Lumi 助手</b><span>效果分析 · 演示模式（回复为预设内容）</span></div>
+          </div>
+          <div class="chat-log" id="chatLog"></div>
+          <div class="chat-input">
+            <input id="chatInput" placeholder="问问贴文效果…" autocomplete="off">
+            <button class="sendbtn" data-action="chat-send">↑</button>
+          </div>
+        </section>
+
+        <section class="page" id="page-paywall">
+          <div id="pwBody"></div>
+        </section>
+
+      </div>
+
+      <nav class="tabbar">
+        <button class="tab active" data-action="tab" data-tab="create" id="tabbtn-create">
+          <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="11" r="9" fill="none" stroke="currentColor" stroke-width="2"/><path d="M11 7v8M7 11h8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>创建
+        </button>
+        <button class="tab" data-action="tab" data-tab="results" id="tabbtn-results">
+          <svg width="22" height="22" viewBox="0 0 22 22"><g stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 18V11"/><path d="M11 18V5"/><path d="M18 18v-9"/></g></svg>效果
+        </button>
+        <button class="tab" data-action="tab" data-tab="profile" id="tabbtn-profile">
+          <svg width="22" height="22" viewBox="0 0 22 22"><circle cx="11" cy="8" r="3.6" fill="none" stroke="currentColor" stroke-width="2"/><path d="M4.5 18.5c1.2-3.4 3.6-5 6.5-5s5.3 1.6 6.5 5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>我的
+        </button>
+      </nav>
+
+      <div class="toast" id="toast"></div>
+
+      <div class="backdrop" id="backdrop" data-action="close-sheet"></div>
+
+      <div class="sheet" id="sheet-products">
+        <div class="sh-grip"></div>
+        <div class="sh-title">选择商品</div>
+        <div class="sh-sub">演示店铺已导入 4 个商品</div>
+        <div class="sh-list" id="prodList"></div>
+      </div>
+
+      <div class="sheet" id="sheet-ig">
+        <div class="sh-grip"></div>
+        <div class="sh-title">Instagram 连接</div>
+        <div class="sh-sub" id="igSheetTxt"></div>
+        <div class="scope-list">
+          <div class="scope"><i>✓</i>读取贴文与互动数据（每日一次，用于效果面板）</div>
+          <div class="scope"><i>✓</i>发布贴文与 Story</div>
+          <div class="scope"><i>✓</i>发布时自动更新主页链接（bio 轮换）</div>
+          <div class="scope"><i>—</i>不读取你的私信内容</div>
+        </div>
+        <button class="cta" data-action="ig-reauth">重新授权</button>
+        <button class="btn-ghost wide" data-action="ig-disconnect">断开连接（演示未授权状态）</button>
+      </div>
+
+      <div class="sheet" id="sheet-auth">
+        <div class="sh-grip"></div>
+        <div class="sh-title">连接 Instagram</div>
+        <div class="sh-reason" id="authReason"></div>
+        <div class="scope-list">
+          <div class="scope"><i>✓</i>读取贴文与互动数据（每日一次）</div>
+          <div class="scope"><i>✓</i>发布贴文与 Story、更新主页链接</div>
+          <div class="scope"><i>—</i>不读取你的私信内容</div>
+        </div>
+        <div class="sh-note">授权后：互动数据（曝光/赞/保存）每日自动同步；未授权时，短链点击与订单统计不受影响。</div>
+        <button class="cta" data-action="auth-grant" id="authBtn">连接 Instagram</button>
+      </div>
+
+      <div class="guide" id="guide">
+        <div class="guide-card">
+          <span class="g-eyebrow">Lumi v2 · 可交互原型</span>
+          <div class="g-quote">「贴文发了，订单也来了——但两者之间，一片漆黑。」<span>—— Maria，手工耳环店主。v2 要做的，就是接通这两条管道。</span></div>
+          <div class="g-h">怎么用 · 效果闭环</div>
+          <div class="loop">
+            <span class="lp"><i>① 生成</i>自动埋好追踪<em>短链 · bio · Story · 优惠码</em></span><span class="arr">→</span>
+            <span class="lp"><i>② 发布</i>一键到 Instagram<em>bio 链接自动更新</em></span><span class="arr">→</span>
+            <span class="lp"><i>③ 看效果</i>订单归因到每条贴文<em>「这条贴文值多少钱」</em></span><span class="arr">→</span>
+            <span class="lp"><i>④ 再优化</i>数据反哺生成<em>建议一键预填</em></span>
+          </div>
+          <div class="g-h">演示动线（完成后自动打勾）</div>
+          <div class="ms-list" id="msGuide"></div>
+          <div class="g-tip">额度用完后会触发付费墙；更多快进入口在「我的」页。所有「⏩」按钮均为演示快进。</div>
+          <button class="cta" data-action="close-guide">开始体验</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+var PRODUCTS = {
+  p1:{name:'月光石耳环', price:33, img:'assets/earrings-moonstone.jpg'},
+  p2:{name:'波西米亚编织耳环', price:28, img:'assets/earrings-terracotta.jpg'},
+  p3:{name:'金色叠戴项链', price:45, img:'assets/necklace-gold.jpg'},
+  p4:{name:'极简珍珠戒指', price:38, img:'assets/pearl-ring.jpg'}
+};
+var TEMPLATES = ['新品促销','节日大促','日常种草','清仓特惠','顾客好评'];
+var TONES = ['亲切日常','活泼种草','高级简约'];
+var CAPTIONS = {
+  '新品促销': function(p){ return '新品上架｜'+p.name+'，只做 12 件。\n手工打磨，每一件都独一无二。售完不补——链接在主页 bio。\n#新品上架 #手工首饰 #smallbusiness'; },
+  '节日大促': function(p){ return p.name+' 节日礼遇｜本周下单立享 9 折，报优惠码 MIA15 再减 $5。\n给心爱的人，也给自己。链接在 bio。\n#节日礼物 #手作 #sale'; },
+  '日常种草': function(p){ return '被问爆的 '+p.name+' 又补货了。\n日常通勤、约会都能戴，越看越顺眼。想要的主页链接直达。\n#日常穿搭 #首饰分享'; },
+  '清仓特惠': function(p){ return '最后一波｜'+p.name+' 清仓特惠，$'+p.price+' 直降 $'+Math.round(p.price*0.7)+'。\n数量有限，售完下架。链接在 bio。\n#清仓特惠 #好物推荐'; },
+  '顾客好评': function(p){ return '「收到 '+p.name+' 的那一刻，真的被质感惊到了。」\n——来自买家 Emma 的评价。谢谢每一份信任，新朋友主页见。\n#买家秀 #好评返图'; }
+};
+var STORY_TXT = {
+  '新品促销':'新品上线 · 限量 12 件','节日大促':'节日 9 折 · 报码 MIA15','日常种草':'补货款回归 · 主页直达','清仓特惠':'清仓最后 24 小时','顾客好评':'来自真实买家的话'
+};
+var NEW_METRICS = {
+  '新品促销':{imp:3650,likes:186,clicks:102,orders:4,revenue:131,codeOrders:1},
+  '节日大促':{imp:4210,likes:240,clicks:128,orders:6,revenue:198,codeOrders:2},
+  '日常种草':{imp:1760,likes:92,clicks:29,orders:1,revenue:33,codeOrders:0},
+  '清仓特惠':{imp:2480,likes:130,clicks:64,orders:3,revenue:89,codeOrders:1},
+  '顾客好评':{imp:1940,likes:158,clicks:41,orders:2,revenue:64,codeOrders:0}
+};
+var SPARK = { post1:[38,42,31,26,18,14,13], post2:[31,29,25,17,10,8,7], post3:[16,11,8,5,3,3,2], post4:[9,6,4,3,2,2,1] };
+function sparkFrom(c){ var a=[Math.round(c*0.55),Math.round(c*0.28),Math.round(c*0.1),Math.round(c*0.07),0,0,0]; a[3]=c-a[0]-a[1]-a[2]; return a; }
+function initialPosts(){
+  return [
+    {id:'post1',tpl:'新品促销',pid:'p1',title:'新品上架｜月光石耳环',time:'周二 20:14',withStory:true,imp:5800,likes:326,clicks:182,orders:9,revenue:296,codeOrders:3,status:'reported'},
+    {id:'post2',tpl:'节日大促',pid:'p3',title:'节日礼遇｜金色叠戴项链',time:'周三 19:02',withStory:true,imp:4680,likes:241,clicks:127,orders:6,revenue:198,codeOrders:2,status:'reported'},
+    {id:'post3',tpl:'顾客好评',pid:'p2',title:'顾客好评｜被回购最多的耳环',time:'周五 12:40',withStory:false,imp:2150,likes:158,clicks:48,orders:5,revenue:182,codeOrders:1,status:'reported'},
+    {id:'post4',tpl:'日常种草',pid:'p4',title:'日常种草｜极简珍珠戒指',time:'周日 11:20',withStory:false,imp:1640,likes:96,clicks:27,orders:3,revenue:114,codeOrders:0,status:'reported'}
+  ];
+}
+
+var state = {
+  plan:'free', quotaUsed:5, quotaTotal:8,
+  igConnected:true,
+  template:'新品促销', pid:'p1', tone:'亲切日常',
+  posts:initialPosts(), draft:null,
+  failNext:false, pendingPublish:false, paywallFrom:null,
+  ms:{gen:0,pub:0,data:0,opt:0,pay:0,upg:0},
+  chatInit:false, chatBusy:false,
+  coachDismissed:false, selPlan:'pro'
+};
+
+function $(s){ return document.querySelector(s); }
+function $$(s){ return document.querySelectorAll(s); }
+var app = document.getElementById('app');
+function fmt$(n){ return '$'+n.toLocaleString('en-US'); }
+function reported(){ return state.posts.filter(function(p){ return p.status==='reported'; }); }
+function totals(){ var o=0,r=0,c=0,imp=0; reported().forEach(function(p){ o+=p.orders; r+=p.revenue; c+=p.clicks; imp+=p.imp; }); return {o:o,r:r,c:c,imp:imp}; }
+function bestTpl(){ var b=null; reported().forEach(function(p){ if(!b||p.revenue>b.revenue) b=p; }); return b?b.tpl:'新品促销'; }
+function quotaText(){ return state.plan==='free' ? (state.quotaUsed+' / 8') : (state.plan==='pro' ? (state.quotaUsed+' / 300') : '不限量'); }
+function canGenerate(){ return state.plan!=='free' || state.quotaUsed<8; }
+
+var TAB_PAGES=['page-create','page-results','page-profile'];
+var navStack=['page-create'];
+function show(id,isBack){
+  $$('.page').forEach(function(p){ p.classList.toggle('active', p.id===id); });
+  var isTab=TAB_PAGES.indexOf(id)>=0;
+  app.dataset.push=isTab?'0':'1';
+  if(isTab){
+    app.dataset.tab=id.replace('page-','');
+    navStack=[id];
+    $$('.tab').forEach(function(t){ t.classList.toggle('active', t.id==='tabbtn-'+id.replace('page-','')); });
+  } else if(!isBack){ navStack.push(id); }
+}
+function goTab(id){ show(id); }
+function goBack(){ if(navStack.length>1){ navStack.pop(); show(navStack[navStack.length-1],true); } }
+
+function openSheet(id){ $('#backdrop').classList.add('on'); $$('.sheet').forEach(function(s){ s.classList.remove('on'); }); $('#'+id).classList.add('on'); }
+function closeSheets(){ $('#backdrop').classList.remove('on'); $$('.sheet').forEach(function(s){ s.classList.remove('on'); }); }
+var toastTimer;
+function toast(msg){ var t=$('#toast'); t.textContent=msg; t.classList.add('on'); clearTimeout(toastTimer); toastTimer=setTimeout(function(){ t.classList.remove('on'); },2400); }
+function openGuide(){ renderMilestones(); $('#guide').classList.add('on'); }
+function closeGuide(){ $('#guide').classList.remove('on'); }
+
+var MS=[
+  ['gen','生成一条贴文（自动埋好追踪）'],
+  ['pub','发布到 Instagram'],
+  ['data','快进 24 小时，看到贴文带来多少订单'],
+  ['opt','按数据建议再生成一条（闭环合拢）'],
+  ['pay','体验额度用尽后的付费墙'],
+  ['upg','升级 Pro，额度解锁']
+];
+function markMs(k){ if(!state.ms[k]){ state.ms[k]=1; renderMilestones(); } }
+function renderMilestones(){
+  ['msSide','msGuide'].forEach(function(id){
+    var el=document.getElementById(id); if(!el) return;
+    el.innerHTML = MS.map(function(m){
+      return '<div class="ms '+(state.ms[m[0]]?'done':'')+'"><span class="ms-ck">'+(state.ms[m[0]]?'✓':'')+'</span>'+m[1]+'</div>';
+    }).join('');
+  });
+}
+
+function sparkSVG(points,stroke,h){
+  h=h||64;
+  var w=320, max=Math.max.apply(null,points.concat([1])), step=w/(points.length-1);
+  var pts=points.map(function(v,i){ return (i*step).toFixed(1)+','+(h-6-(v/max)*(h-14)).toFixed(1); });
+  var gid='sg'+Math.random().toString(36).slice(2,7);
+  return '<svg viewBox="0 0 '+w+' '+h+'" preserveAspectRatio="none" class="spark">'+
+    '<defs><linearGradient id="'+gid+'" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="'+stroke+'" stop-opacity="0.22"/><stop offset="1" stop-color="'+stroke+'" stop-opacity="0"/></linearGradient></defs>'+
+    '<path d="M'+pts.join(' L')+' L'+w+','+h+' L0,'+h+' Z" fill="url(#'+gid+')"/>'+
+    '<polyline points="'+pts.join(' ')+'" fill="none" stroke="'+stroke+'" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/></svg>';
+}
+
+function renderCreate(){
+  $('#tplChips').innerHTML = TEMPLATES.map(function(t){
+    return '<button class="chip '+(state.template===t?'active':'')+'" data-action="select-template" data-val="'+t+'">'+t+'</button>';
+  }).join('');
+  $('#toneSeg').innerHTML = TONES.map(function(t){
+    return '<span class="'+(state.tone===t?'active':'')+'" data-action="select-tone" data-val="'+t+'">'+t+'</span>';
+  }).join('');
+  var p=PRODUCTS[state.pid];
+  $('#prodPick').innerHTML = '<img src="'+p.img+'" alt=""><span><b>'+p.name+'</b><span>$'+p.price+'</span></span><em>更换 ›</em>';
+  renderQuota(); renderShopChip();
+}
+function renderQuota(){
+  var q=$('#quotaCard');
+  if(state.plan==='free'){
+    var pct=state.quotaUsed/8*100;
+    q.innerHTML='<div class="quota-top"><span>Free · 免费额度（月度）</span><b>本月已用 '+quotaText()+' 次</b></div><div class="bar"><i class="'+(pct>=87.5?'warn':'')+'" style="width:'+pct+'%"></i></div>';
+  } else if(state.plan==='pro'){
+    q.innerHTML='<div class="quota-top"><span>Pro · $19/月</span><b>本月已用 '+quotaText()+' 次</b></div><div class="bar"><i style="width:'+Math.min(100,state.quotaUsed/300*100)+'%"></i></div>';
+  } else {
+    q.innerHTML='<div class="quota-top"><span>Pro+ · $49/月</span><b>生成不限量</b></div>';
+  }
+  var cta=$('#ctaGen');
+  if(state.plan==='free' && state.quotaUsed>=8){ cta.textContent='额度已用完 · 升级解锁'; cta.classList.add('full'); }
+  else { cta.textContent='生成贴文'; cta.classList.remove('full'); }
+  renderPlanCard();
+}
+function renderShopChip(){
+  var chip=$('#shopChip');
+  chip.classList.toggle('off',!state.igConnected);
+  $('#shopChipTxt').textContent="Maria's Jewelry · IG "+(state.igConnected?'已连接':'未连接');
+}
+function renderCoach(){
+  var c=$('#coach'); if(!c) return;
+  c.classList.toggle('hidden', !!state.coachDismissed);
+}
+function renderProdSheet(){
+  $('#prodList').innerHTML = Object.keys(PRODUCTS).map(function(k){
+    var p=PRODUCTS[k];
+    return '<button class="sh-item" data-action="select-product" data-id="'+k+'"><img src="'+p.img+'" alt=""><span><b>'+p.name+'</b><span>$'+p.price+'</span></span><em>'+(state.pid===k?'✓':'')+'</em></button>';
+  }).join('');
+}
+
+var GEN_STEPS=[
+  ['分析商品卖点','读取商品名、价格与卖点'],
+  ['撰写贴文文案','贴文 + 配套 Story 文案'],
+  ['生成追踪短链','指向商品落地页 · 实时统计点击'],
+  ['替换 IG 主页链接','bio 链接自动指向本贴文'],
+  ['生成配套 Story','带链接贴纸 · 与贴文同步'],
+  ['绑定专属优惠码','MIA15 · DM 报码即归因']
+];
+var genTimers=[];
+function clearGen(){ genTimers.forEach(clearTimeout); genTimers=[]; }
+
+function tryGenerate(){
+  if(!canGenerate()){ openPaywall('generate'); return; }
+  startGenerate();
+}
+function startGenerate(){
+  var fail=state.failNext; state.failNext=false;
+  clearGen();
+  show('page-generate');
+  $('#genList').innerHTML=GEN_STEPS.map(function(s){
+    return '<div class="gen-step"><span class="gs-ico"></span><span><span class="gs-t">'+s[0]+'</span><span class="gs-sub">'+s[1]+'</span></span></div>';
+  }).join('');
+  $('#genFail').style.display='none';
+  $('#genNote').textContent='演示：约 3 秒完成';
+  var steps=$$('#genList .gen-step');
+  var t=350;
+  steps.forEach(function(el,i){
+    genTimers.push(setTimeout(function(){
+      el.classList.add('run'); el.querySelector('.gs-ico').innerHTML='<span class="gs-spin"></span>';
+      if(i>0){ steps[i-1].classList.remove('run'); steps[i-1].classList.add('done'); steps[i-1].querySelector('.gs-ico').innerHTML='✓'; }
+    },t));
+    t+=560;
+  });
+  if(fail){
+    genTimers.push(setTimeout(function(){
+      clearGen();
+      var el0=steps[0];
+      el0.classList.remove('run'); el0.classList.add('done'); el0.querySelector('.gs-ico').innerHTML='✓';
+      var el=steps[1];
+      el.classList.remove('run'); el.classList.add('fail'); el.querySelector('.gs-ico').innerHTML='!';
+      $('#genFail').style.display='flex';
+      $('#genNote').textContent='演示：模拟了一次 AI 异常';
+    },1400));
+    return;
+  }
+  genTimers.push(setTimeout(onGenSuccess,t+180));
+}
+function onGenSuccess(){
+  if(state.plan==='free'){ state.quotaUsed=Math.min(8,state.quotaUsed+1); }
+  var p=PRODUCTS[state.pid];
+  state.draft={
+    tpl:state.template, pid:state.pid, tone:state.tone,
+    caption:CAPTIONS[state.template](p), story:STORY_TXT[state.template],
+    link:'lumi.to/'+Math.random().toString(36).slice(2,6), code:'MIA15'
+  };
+  markMs('gen'); renderQuota(); renderResult(); show('page-result');
+}
+function renderResult(){
+  var d=state.draft, p=PRODUCTS[d.pid];
+  $('#resultQuota').textContent = state.plan==='free' ? ('本次生成成功 · 本月已用 '+quotaText()+' 次') : ('Pro · '+quotaText());
+  $('#resultBody').innerHTML =
+    '<div class="result"><span class="v2tag">v2 · 自动埋链</span>'+
+      '<div class="postprev"><img src="'+p.img+'" alt=""><div class="pp-cap"><b>贴文文案已生成</b>'+d.caption+'</div></div>'+
+      '<div class="storyprev"><span class="ring"><img src="'+p.img+'" alt=""></span><span class="st-t"><b>配套 Story</b><span>'+d.story+'</span></span><span class="stlink">链接贴纸</span></div>'+
+      '<ul class="tracklist">'+
+        '<li><span class="ck">✓</span><span class="tl"><b>追踪短链已生成</b><span>'+d.link+' → 商品落地页</span></span><button class="cp" data-action="copy" data-what="link">复制</button></li>'+
+        '<li><span class="ck">✓</span><span class="tl"><b>IG 主页链接已替换</b><span>贴文中「链接在 bio」即刻生效</span></span></li>'+
+        '<li><span class="ck">✓</span><span class="tl"><b>配套 Story 已就绪</b><span>带链接贴纸，与贴文同步发布</span></span></li>'+
+        '<li><span class="ck">✓</span><span class="tl"><b>专属优惠码 '+d.code+'</b><span>DM 报码即归因，线下成交也能算</span></span><button class="cp" data-action="copy" data-what="code">复制</button></li>'+
+      '</ul>'+
+    '</div>'+
+    '<div class="btnrow"><button class="btn-ghost" data-action="copy" data-what="caption">复制文案</button><button class="btn-solid" data-action="regenerate">换一版</button></div>'+
+    '<button class="cta" data-action="publish" style="margin-top:2px">去发布</button>'+
+    '<div class="rnote">「换一版」= 重新生成，消耗 1 次额度</div>';
+}
+
+function publish(){
+  if(!state.igConnected){ state.pendingPublish=true; openAuth('发布需要连接 IG：自动更新主页链接、发布 Story。点击与订单统计不受影响。'); return; }
+  doPublish();
+}
+function doPublish(){
+  var d=state.draft, p=PRODUCTS[d.pid];
+  var firstLine=d.caption.split('\n')[0];
+  state.posts.unshift({ id:'new'+Date.now(), tpl:d.tpl, pid:d.pid, title:firstLine, time:'刚刚', withStory:true, status:'pending', link:d.link, code:d.code });
+  markMs('pub');
+  var np=state.posts[0];
+  $('#pubBody').innerHTML =
+    '<div class="pubck">✓</div>'+
+    '<h1>已发布到 Instagram</h1>'+
+    '<ul class="publist">'+
+      '<li><span class="ck">✓</span>贴文已上线 @mariasjewelry</li>'+
+      '<li><span class="ck">✓</span>Story 已同步发布（带链接贴纸）</li>'+
+      '<li><span class="ck">✓</span>主页 bio 链接已指向本贴文</li>'+
+    '</ul>'+
+    '<div class="pubmini"><img src="'+p.img+'" alt=""><div><b>'+np.title+'</b><span>模板：'+d.tpl+' · 语气：'+d.tone+'</span></div></div>'+
+    '<div class="pubnote">效果数据将于 24 小时后陆续回传（IG 互动数据每日更新一次）。<br>追踪链接与优惠码带来的订单会被自动归因到这条贴文。</div>'+
+    '<div class="pubbtns">'+
+      '<button class="cta" data-action="fast-forward">⏩ 快进 24 小时 · 看数据（演示）</button>'+
+      '<button class="btn-ghost wide" data-action="later">稍后再看，先去逛逛</button>'+
+    '</div>';
+  show('page-publish');
+}
+function fastForward(){
+  var np=null; state.posts.forEach(function(p){ if(p.status==='pending'&&!np) np=p; });
+  if(np){
+    var m=NEW_METRICS[np.tpl];
+    Object.keys(m).forEach(function(k){ np[k]=m[k]; });
+    np.status='reported'; np.spark=sparkFrom(m.clicks);
+    markMs('data');
+  }
+  renderResults(); goTab('page-results'); toast('24 小时后 · 效果数据已回传');
+}
+
+function renderResults(){
+  var ig=state.igConnected;
+  $('#syncLine').textContent = ig ? 'IG 数据已同步 · 今天 09:12' : 'IG 未连接 · 点击与订单统计不受影响（演示状态）';
+  $('#syncLine').classList.toggle('bad',!ig);
+  var t=totals();
+  var pending=null; state.posts.forEach(function(p){ if(p.status==='pending'&&!pending) pending=p; });
+  var rep=reported();
+  var avgCtr=t.imp?(t.c/t.imp*100):0;
+  var bestPost=null; rep.forEach(function(p){ if(!bestPost||p.revenue>bestPost.revenue) bestPost=p; });
+  var newReported=null; rep.forEach(function(p){ if(String(p.id).indexOf('new')===0&&!newReported) newReported=p; });
+  var bt=bestTpl();
+
+  var hero='<div class="hero"><div class="hero-label">近 7 天贴文带来的收入</div><div class="hero-money">'+fmt$(t.r)+'</div>'+
+    '<div class="hero-sub"><span class="hero-pill">'+t.o+' 单</span><span>↑ 12% 较上周</span>'+(newReported?'<span class="hero-pill">含你刚发的贴文</span>':'')+'</div></div>';
+
+  var metrics='<div class="metrics">'+
+    '<div class="mcell"><span>曝光'+(ig?'':' · 未连接')+'</span><b class="'+(ig?'':'dim')+'">'+(ig?t.imp.toLocaleString('en-US'):'—')+'</b></div>'+
+    '<div class="mcell"><span>点击</span><b>'+t.c+'</b></div>'+
+    '<div class="mcell"><span>点击率</span><b>'+(ig?avgCtr.toFixed(1)+'%':'—')+'</b></div></div>';
+
+  var insight;
+  if(pending){
+    insight='<div class="insight"><div class="ins-head">行动建议</div><p>《'+pending.title+'》的数据正在回传。24 小时后，这里会告诉你它带来了多少订单。</p><div class="ins-ctas"><button class="ins-btn" data-action="fast-forward">⏩ 快进 24 小时（演示）</button></div></div>';
+  } else if(newReported){
+    var ctr=newReported.imp?(newReported.clicks/newReported.imp*100):0;
+    insight='<div class="insight"><div class="ins-head">行动建议</div><p>《'+newReported.title+'》点击率 <b>'+ctr.toFixed(1)+'%</b>（账号均值 '+avgCtr.toFixed(1)+'%），带来 <b>'+newReported.orders+' 单 · '+fmt$(newReported.revenue)+'</b>。<b>'+newReported.tpl+' × Story</b> 组合持续有效——建议保持，并固定晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+newReported.tpl+'">按建议生成 →</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button></div></div>';
+  } else {
+    insight='<div class="insight"><div class="ins-head">行动建议</div><p>带 Story 的贴文下单率比纯贴文高 <b>60%</b>。下次生成建议保留 Story 组合，并优先在晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+bt+'">按建议生成（'+bt+'）→</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button></div></div>';
+  }
+
+  var rows=state.posts.map(function(p){
+    var prod=PRODUCTS[p.pid];
+    var isBest=bestPost&&p.id===bestPost.id;
+    var isNew=String(p.id).indexOf('new')===0;
+    var badge='';
+    if(p.status==='pending'){ badge='<span class="pc-badge pend">数据回传中</span>'; }
+    else if(isBest){ badge='<span class="pc-badge">本周最佳</span>'; }
+    else if(isNew){ badge='<span class="pc-badge new">新</span>'; }
+    else if(rep.length>2 && p.revenue < t.r/rep.length*0.6){ badge='<span class="pc-badge low">均值以下</span>'; }
+    var body;
+    if(p.status==='pending'){
+      body='<div class="pending-card"><span>⏳ 24 小时后数据回传</span><button data-action="fast-forward">⏩ 快进（演示）</button></div>';
+    } else {
+      body='<div class="pc-stats"><span>曝光 '+(ig?p.imp.toLocaleString('en-US'):'—')+'</span><span>点击 '+p.clicks+'</span>'+(p.withStory?'<span>带 Story</span>':'')+'</div>'+
+           '<div class="pc-money">下单 '+p.orders+' · <b>'+fmt$(p.revenue)+'</b><span class="code">'+(p.codeOrders?('含 '+p.codeOrders+' 单优惠码'):'短链归因')+'</span></div>';
+    }
+    return '<div class="card pcard" data-action="open-post" data-id="'+p.id+'">'+
+      '<div class="pc-top"><img src="'+prod.img+'" alt=""><div><div class="pc-title">'+p.title+'</div><div class="pc-meta">'+p.time+' · '+p.tpl+(p.withStory?' · 带 Story':'')+'</div></div>'+badge+'</div>'+body+
+      (p.status==='reported'?'<div class="pc-stats" style="color:var(--brand-deep);font-weight:800;font-size:11px">查看完整链路 ›</div>':'')+
+    '</div>';
+  }).join('');
+
+  var banner = ig?'':'<div class="igbanner"><span>连接 IG 后可查看曝光与互动数据；点击与订单统计不受影响。</span><button data-action="ig-reauth">去连接</button></div>';
+  var footnote='<div class="footnote">订单 = 经追踪链接与优惠码验证 · 7 天点击窗口。同期店铺总订单 '+(t.o+4)+' 单，其余 4 单来源未识别，不计入上表。</div>';
+
+  $('#rsBody').innerHTML=banner+hero+metrics+insight+
+    '<div class="weekhead">近 7 天贴文 <span>共 '+state.posts.length+' 条</span></div>'+rows+footnote;
+}
+
+function openPost(id){
+  var p=null; state.posts.forEach(function(x){ if(x.id===id) p=x; });
+  if(!p) return;
+  if(p.status==='pending'){ toast('数据回传中 · 快进 24 小时后可查看'); return; }
+  var prod=PRODUCTS[p.pid];
+  var ctr=p.imp?(p.clicks/p.imp*100):0, cvr=p.clicks?(p.orders/p.clicks*100):0;
+  var rep=reported();
+  var bestPost=null; rep.forEach(function(x){ if(!bestPost||x.revenue>bestPost.revenue) bestPost=x; });
+  var fnRow=function(label,val,src,pct,width){
+    return '<div class="fn-row"><div class="fn-top"><span>'+label+'</span><b>'+val+'</b><span class="pct">'+pct+'</span><span class="src">'+src+'</span></div><div class="fn-bar"><i style="width:'+width+'%"></i></div></div>';
+  };
+  var w2=Math.sqrt(Math.min(1,p.clicks/p.imp))*100, w3=Math.sqrt(Math.min(1,p.orders/p.imp))*100;
+  var spark=p.spark||SPARK[p.id]||[1,1,1,1,1,1,1];
+  $('#detailBody').innerHTML=
+    '<div class="card dt-head"><img src="'+prod.img+'" alt=""><div><div class="pc-title">'+p.title+'</div><div class="pc-meta">'+p.time+' · '+p.tpl+(p.withStory?' · 带 Story':'')+'</div></div>'+((bestPost&&p.id===bestPost.id)?'<span class="pc-badge">本周最佳</span>':'')+'</div>'+
+    '<div class="dt-money"><b>'+fmt$(p.revenue)+'</b><span>'+p.orders+' 单</span><em>本条贴文带来</em></div>'+
+    '<div class="card funnel"><div class="ins-head">完整链路 · 每个数字从哪来</div>'+
+      fnRow('曝光',p.imp.toLocaleString('en-US'),'IG Insights · 每日更新','',100)+
+      '<div class="fn-divider"><span>↓ 曝光→点击 '+ctr.toFixed(1)+'%</span></div>'+
+      fnRow('点击',''+p.clicks,'短链统计 · 实时','实时',w2)+
+      '<div class="fn-divider"><span>↓ 点击→下单 '+cvr.toFixed(1)+'%</span></div>'+
+      fnRow('订单',''+p.orders,'店铺匹配 · 实时','实时',w3)+
+    '</div>'+
+    '<div class="card attr">'+
+      '<div class="attr-row"><span>短链订单（'+p.link+'）</span><b>'+(p.orders-p.codeOrders)+' 单 · 7 天点击窗口</b></div>'+
+      '<div class="attr-row"><span>优惠码订单（'+(p.code||'MIA15')+'）</span><b>'+p.codeOrders+' 单 · DM 报码即归因</b></div>'+
+      '<div class="attr-row"><span>互动数据</span><b>赞 '+p.likes+'（IG Insights）</b></div>'+
+    '</div>'+
+    '<div class="card sparkcard"><div class="sc-t">近 7 天点击趋势</div>'+sparkSVG(spark,'#0B8F6B')+'</div>'+
+    '<div class="dtbtns"><button class="btn-ghost" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button><button class="btn-solid" data-action="prefill-gen" data-tpl="'+p.tpl+'">按此模板再生成</button></div>';
+  show('page-detail');
+}
+
+var CHAT_QA = {
+  '为什么月光石这条效果好？': {
+    meta:'⚙ 已调用工具：分析贴文表现 · 4 条贴文',
+    body:'《新品上架｜月光石耳环》点击率 <b>3.1%</b>，高于账号均值 2.7%，本周带来 <b>9 单 · $296</b>。\n三个可复制的亮点：\n① 悬念式开头制造好奇\n② 「只做 12 件」明确稀缺\n③ Story 联动 + bio 短链一步直达\n建议：把「限量」写法复用到下一批新品。',
+    card:'post:post1',
+    cta:['prefill-gen','新品促销','按此模板生成一条']
+  },
+  '帮我优化波西米亚那条文案': {
+    meta:'⚙ 已调用工具：读取贴文数据 · 生成优化文案',
+    body:'《顾客好评｜被回购最多的耳环》点击率 <b>2.2%</b>，低于均值——原贴文问题：卖点堆砌、缺少行动指引。给你一版改写：',
+    cap:'被问爆的波西米亚耳环，又一次补货。\n颜色是今年最火的陶土色，拍照自带滤镜。\n库存不多，主页链接直达——',
+    cta:['prefill-gen','顾客好评','用这版再生成一条']
+  },
+  '下一周发什么好？': {
+    meta:'⚙ 已调用工具：分析贴文表现 · 生成本周计划',
+    body:'本周规律：<b>新品促销</b>下单率最高（9 单），带 Story 的贴文点击率高出 60%。\n下周节奏建议：\n· 周二晚 8 点：新品 × Story\n· 周四：顾客好评合集\n· 周日：清仓特惠\n按此执行，预估周收入 $850–950。',
+    cta:['prefill-gen','新品促销','生成周二的新品贴文']
+  }
+};
+var CHAT_FALLBACK = {
+  meta:'⚙ 演示模式',
+  body:'我擅长两件事：分析贴文效果、优化内容。可以先试试下面的问题：',
+  chipsOnly:true
+};
+function renderChatGreeting(){
+  if(state.chatInit) return;
+  state.chatInit=true;
+  var log=$('#chatLog');
+  log.innerHTML='<div class="msg ai"><div class="body">你好 Maria！我可以帮你分析每条贴文的效果、优化文案、规划发布节奏。</div><div class="qchips">'+
+    Object.keys(CHAT_QA).map(function(q){ return '<button class="qchip" data-action="chat-quick" data-q="'+q+'">'+q+'</button>'; }).join('')+
+    '</div></div>';
+}
+function chatAppend(html,cls){
+  var log=$('#chatLog');
+  var d=document.createElement('div');
+  d.className='msg '+(cls||'ai');
+  d.innerHTML=html;
+  log.appendChild(d);
+  log.scrollTop=log.scrollHeight;
+}
+function sendChat(q){
+  if(state.chatBusy) return;
+  q=(q||'').trim();
+  if(!q) return;
+  chatAppend('<div class="body"></div>'.replace('<div class="body"></div>',''),'user');
+  $('#chatLog').lastChild.textContent=q;
+  var log=$('#chatLog');
+  var typing=document.createElement('div');
+  typing.className='typing'; typing.innerHTML='<i></i><i></i><i></i>';
+  log.appendChild(typing); log.scrollTop=log.scrollHeight;
+  state.chatBusy=true;
+  setTimeout(function(){
+    typing.remove();
+    var qa=CHAT_QA[q]||CHAT_FALLBACK;
+    var html='<div class="meta">'+qa.meta+'</div><div class="body">'+qa.body+'</div>';
+    if(qa.card){
+      var pid=qa.card.split(':')[1];
+      var p=null; state.posts.forEach(function(x){ if(x.id===pid) p=x; });
+      if(p){ var prod=PRODUCTS[p.pid];
+        html+='<div class="chat-card"><div class="cc-row"><img src="'+prod.img+'" alt=""><div><b>'+p.title+'</b><span>'+p.orders+' 单 · '+fmt$(p.revenue)+'</span></div><button class="chat-cta alt" style="margin-left:auto" data-action="chat-view-post" data-id="'+p.id+'">查看详情</button></div></div>';
+      }
+    }
+    if(qa.cap){
+      html+='<div class="chat-card"><div class="caplabel">优化版文案</div><div class="cap">'+qa.cap+'</div></div>';
+    }
+    if(qa.cta){
+      html+='<button class="chat-cta" data-action="'+qa.cta[0]+'" data-tpl="'+qa.cta[1]+'">'+qa.cta[2]+'</button>';
+    }
+    if(qa.chipsOnly){
+      html+='<div class="qchips">'+Object.keys(CHAT_QA).map(function(k){ return '<button class="qchip" data-action="chat-quick" data-q="'+k+'">'+k+'</button>'; }).join('')+'</div>';
+    }
+    chatAppend(html,'ai');
+    state.chatBusy=false;
+  },900);
+}
+function openChat(pre){
+  renderChatGreeting();
+  show('page-chat');
+  if(pre){ setTimeout(function(){ sendChat(pre); },350); }
+}
+
+function renderProfile(){
+  var pb=$('#planBadge');
+  pb.textContent=state.plan==='free'?'Free':(state.plan==='pro'?'Pro':'Pro+');
+  pb.classList.toggle('pro',state.plan!=='free');
+  renderPlanCard();
+  var ig=$('#igCard');
+  ig.innerHTML='<span class="ico">📷</span><div><b>Instagram '+(state.igConnected?'已连接':'未连接')+'</b><span>@mariasjewelry'+(state.igConnected?' · 每日自动同步互动数据':' · 曝光数据不可见，点击/订单不受影响')+'</span></div><button class="go" data-action="ig-manage">'+(state.igConnected?'管理':'去连接')+' ›</button>';
+}
+function renderPlanCard(){
+  var pc=$('#planCard'); if(!pc) return;
+  if(state.plan==='free'){
+    pc.innerHTML='<div class="pl-top"><b>当前方案：Free</b><span>本月已用 '+quotaText()+' 次</span></div><button class="cta" data-action="open-paywall" data-from="profile">升级 Pro · $19/月 · 300 次生成</button>';
+  } else if(state.plan==='pro'){
+    pc.innerHTML='<div class="pl-top"><b>当前方案：Pro</b><span>本月已用 '+quotaText()+' 次</span></div><button class="cta" data-action="open-paywall" data-from="profile">管理方案 / 升级 Pro+ 不限量</button>';
+  } else {
+    pc.innerHTML='<div class="pl-top"><b>当前方案：Pro+</b><span>生成不限量</span></div><button class="cta" data-action="open-paywall" data-from="profile">管理方案</button>';
+  }
+}
+
+var PW_PLANS={
+  free:{name:'Free',price:'$0',desc:'适合刚起步试水',feats:['8 次生成 / 月','基础模板','1 个 IG 账号','效果面板（只读 7 天）']},
+  pro:{name:'Pro',price:'$19',desc:'最适合手作小店主',tag:'最受欢迎',feats:['300 次生成 / 月','全部模板 + Story 组合','效果面板完整版','优惠码归因','优先支持']},
+  proplus:{name:'Pro+',price:'$49',desc:'多账号 · 团队协作',feats:['生成不限量','多账号管理（3 个）','团队协作 2 席位','数据导出']}
+};
+function pwOptRow(k){
+  var p=PW_PLANS[k];
+  var cur=state.plan===k, sel=state.selPlan===k;
+  var tag=cur?'<span class="o-tag cur">当前方案</span>':(p.tag?'<span class="o-tag">'+p.tag+'</span>':'');
+  return '<button class="opt'+(sel?' sel':'')+'" data-action="select-plan" data-plan="'+k+'">'+
+    '<span class="o-rad"><i></i></span>'+
+    '<span class="o-main"><b>'+p.name+'</b><span>'+p.desc+'</span></span>'+
+    '<span class="o-price"><b>'+p.price+'</b><span>/ 月</span></span>'+tag+'</button>';
+}
+function pwFeatRows(k){
+  return PW_PLANS[k].feats.map(function(f){return '<div class="sf-row"><i>✓</i>'+f+'</div>';}).join('');
+}
+function pwTitle(k){
+  var p=PW_PLANS[k];
+  return (state.plan===k?'当前方案 · ':'')+p.name+' · '+p.price+'/月，包含：';
+}
+function updatePwCta(){
+  var b=$('#pwCta'); if(!b) return;
+  var k=state.selPlan;
+  var p=PW_PLANS[k];
+  if(k===state.plan){
+    b.className='cta-up ghost'; b.textContent='当前方案 · 继续使用';
+    b.dataset.action='back'; b.dataset.plan='';
+  } else {
+    var rank={free:0,pro:1,proplus:2};
+    var up=rank[k]>rank[state.plan];
+    var verb=up?'升级到':'切换到';
+    b.className='cta-up'+(up?'':' ghost');
+    b.textContent=verb+' '+p.name+' · '+p.price+'/月';
+    b.dataset.action='upgrade'; b.dataset.plan=k;
+  }
+}
+function selectPlan(k){
+  state.selPlan=k;
+  $$('#pwBody .opt').forEach(function(o){ o.classList.toggle('sel', o.dataset.plan===k); });
+  var sf=$('#selFeats'); if(sf) sf.innerHTML=pwFeatRows(k);
+  var st=$('#sfTitle'); if(st) st.textContent=pwTitle(k);
+  updatePwCta();
+}
+function openPaywall(from){
+  state.paywallFrom=from||'create';
+  markMs('pay');
+  var t=totals();
+  var mult=Math.max(1,Math.round(t.r/19));
+  var exhausted=state.plan==='free' && state.quotaUsed>=8;
+  var banner=exhausted
+    ? '<div class="banner"><i>!</i>本月免费额度已用完<span>8 / 8</span></div>'
+    : '<div class="banner"><i>✦</i>升级后解锁 300 次/月生成与完整效果面板<span>Free · 已用 '+quotaText()+'</span></div>';
+  state.selPlan = state.plan==='free' ? 'pro' : 'proplus';
+  $('#pwBody').innerHTML=
+    '<div class="pushbar"><button class="backbtn" data-action="back">‹</button><div class="pb-t"><b>升级</b><span>价值先行，再谈价格</span></div></div>'+
+    '<div class="pw-scroll">'+
+      banner+
+      '<div class="recap">'+
+        '<div class="rlabel">你的贴文本月已为你带来</div>'+
+        '<div class="rmoney"><b>'+fmt$(t.r)+'</b><span>'+t.o+' 单</span></div>'+
+        '<div class="rline">工具月费 $19 · 本月已赚回 '+mult+' 倍 —— 这份效果值得继续</div>'+
+      '</div>'+
+      '<div class="pw-sec">选择档位</div>'+
+      '<div class="optlist">'+['free','pro','proplus'].map(pwOptRow).join('')+'</div>'+
+      '<div class="pw-sec" id="sfTitle">'+pwTitle(state.selPlan)+'</div>'+
+      '<div class="card sel-feats" id="selFeats">'+pwFeatRows(state.selPlan)+'</div>'+
+    '</div>'+
+    '<div class="pw-sticky">'+
+      '<button class="cta-up" id="pwCta">升级到 Pro · $19/月</button>'+
+      '<div class="pw-trust">随时取消，当月生效 · 效果数据永久保留 · 演示：点击即模拟支付成功</div>'+
+    '</div>';
+  updatePwCta();
+  show('page-paywall');
+}
+function upgrade(plan){
+  if(!plan){ return; }
+  if(plan===state.plan){
+    toast(plan==='pro'?'你已是 Pro 会员，感谢支持':'你已在当前方案中');
+    goBack(); return;
+  }
+  var btn=$('#pwCta');
+  if(btn){ btn.classList.add('paying'); btn.textContent='处理中…'; }
+  setTimeout(function(){
+    var rank={free:0,pro:1,proplus:2};
+    var verb=rank[plan]>rank[state.plan]?'已升级':'已切换到';
+    state.plan=plan;
+    if(state.plan==='pro' && state.quotaTotal===8){ state.quotaTotal=300; }
+    markMs('upg'); renderQuota(); renderProfile();
+    toast(plan==='pro'?verb+' Pro · 每月 300 次生成':verb+' Pro+ · 生成不限量');
+    var from=state.paywallFrom;
+    if(from==='generate'){ goTab('page-create'); setTimeout(startGenerate,400); }
+    else if(from==='profile'){ goTab('page-profile'); }
+    else { goTab('page-create'); }
+  },1200);
+}
+
+function openAuth(reason){
+  $('#authReason').textContent=reason||'连接 Instagram 后可同步互动数据。';
+  openSheet('sheet-auth');
+}
+function grantAuth(){
+  var b=$('#authBtn');
+  b.textContent='连接中…';
+  setTimeout(function(){
+    b.textContent='连接 Instagram';
+    state.igConnected=true;
+    closeSheets();
+    renderShopChip(); renderResults(); renderProfile(); renderIGSheet();
+    toast('IG 已连接 · 明天 09:00 起每日同步互动数据');
+    if(state.pendingPublish){ state.pendingPublish=false; setTimeout(doPublish,300); }
+  },900);
+}
+function renderIGSheet(){
+  $('#igSheetTxt').textContent = state.igConnected ? '已连接 @mariasjewelry · 明天 09:00 每日同步' : '未连接 · 曝光与互动数据不可见';
+}
+function disconnectIG(){
+  state.igConnected=false; closeSheets();
+  renderShopChip(); renderResults(); renderProfile(); renderIGSheet();
+  toast('已断开 IG（演示）· 效果页将切换为部分数据状态');
+}
+
+function prefillGen(tpl){
+  state.template=tpl;
+  renderCreate();
+  markMs('opt');
+  goTab('page-create');
+  toast('已按建议预填模板：'+tpl);
+}
+
+function copyText(txt){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(txt).then(function(){ toast('已复制'); }).catch(function(){ fallbackCopy(txt); });
+  } else { fallbackCopy(txt); }
+}
+function fallbackCopy(t){
+  var ta=document.createElement('textarea');
+  ta.value=t; document.body.appendChild(ta); ta.select();
+  try{ document.execCommand('copy'); toast('已复制'); }
+  catch(e){ toast('复制失败，请手动选择'); }
+  ta.remove();
+}
+
+document.addEventListener('click',function(e){
+  var el=e.target.closest('[data-action]');
+  if(!el) return;
+  var a=el.dataset.action;
+  if(a==='tab'){ goTab('page-'+el.dataset.tab); }
+  else if(a==='open-guide'){ openGuide(); }
+  else if(a==='close-guide'){ closeGuide(); toast('去「创建」页生成第一条贴文试试 →'); }
+  else if(a==='dismiss-coach'){ state.coachDismissed=true; renderCoach(); }
+  else if(a==='select-plan'){ selectPlan(el.dataset.plan); }
+  else if(a==='close-sheet'){ closeSheets(); }
+  else if(a==='select-template'){ state.template=el.dataset.val; renderCreate(); }
+  else if(a==='select-tone'){ state.tone=el.dataset.val; renderCreate(); }
+  else if(a==='open-products'){ renderProdSheet(); openSheet('sheet-products'); }
+  else if(a==='select-product'){ state.pid=el.dataset.id; renderCreate(); closeSheets(); }
+  else if(a==='generate'){ tryGenerate(); }
+  else if(a==='regenerate'){ tryGenerate(); }
+  else if(a==='retry-gen'){ startGenerate(); }
+  else if(a==='copy'){
+    var d=state.draft;
+    if(!d) return;
+    if(el.dataset.what==='link') copyText('https://'+d.link);
+    else if(el.dataset.what==='code') copyText(d.code);
+    else copyText(d.caption);
+  }
+  else if(a==='publish'){ publish(); }
+  else if(a==='fast-forward'){ fastForward(); }
+  else if(a==='later'){ goTab('page-create'); toast('数据回传后，「效果」页会提醒你'); }
+  else if(a==='open-post'){ openPost(el.dataset.id); }
+  else if(a==='prefill-gen'){ prefillGen(el.dataset.tpl); }
+  else if(a==='back'){ goBack(); }
+  else if(a==='open-chat'){ openChat(); }
+  else if(a==='open-chat-q'){ openChat(el.dataset.q); }
+  else if(a==='chat-quick'){ sendChat(el.dataset.q); }
+  else if(a==='chat-send'){ var v=$('#chatInput').value; $('#chatInput').value=''; sendChat(v); }
+  else if(a==='chat-view-post'){ openPost(el.dataset.id); }
+  else if(a==='open-paywall'){ openPaywall(el.dataset.from); }
+  else if(a==='upgrade'){ upgrade(el.dataset.plan); }
+  else if(a==='ig-manage'){ if(state.igConnected){ renderIGSheet(); openSheet('sheet-ig'); } else { openAuth('连接 Instagram 后可同步曝光与互动数据。'); } }
+  else if(a==='ig-reauth'){ closeSheets(); openAuth('重新授权 Instagram · 授权后明天起恢复每日同步。'); }
+  else if(a==='ig-disconnect'){ disconnectIG(); }
+  else if(a==='auth-grant'){ grantAuth(); }
+  else if(a==='demo-reset'){ location.reload(); }
+  else if(a==='demo-quota'){ state.quotaUsed=8; renderQuota(); toast('已模拟额度用完'); openPaywall('profile'); }
+  else if(a==='demo-fail'){ state.failNext=true; goTab('page-create'); toast('已设置：下次生成将失败一次（验证异常处理）'); }
+  else if(a==='demo-ig'){ disconnectIG(); goTab('page-results'); }
+});
+
+document.getElementById('chatInput').addEventListener('keydown',function(e){
+  if(e.key==='Enter'){ var v=this.value; this.value=''; sendChat(v); }
+});
+
+renderCreate(); renderResults(); renderProfile(); renderMilestones(); renderIGSheet(); renderCoach();
+</script>
+</body>
+</html>
