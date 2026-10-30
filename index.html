@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Lumi v2 · 可交互原型</title>
+<title>Postworth · 可交互原型</title>
 <style>
   :root{
     --brand:#6D5DF6; --brand-deep:#4F3EE8; --brand-soft:#EEEBFE; --brand-ink:#3D2FB8;
@@ -41,7 +41,7 @@
 
   .pb{padding:6px 18px 24px;display:flex;flex-direction:column;gap:12px;flex:1}
   .appbar{display:flex;align-items:center;justify-content:space-between;padding:2px 2px 0}
-  .brandmark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:18px;letter-spacing:-.2px}
+  .brandmark{display:flex;align-items:center;gap:8px;font-weight:800;font-size:17px;letter-spacing:-.3px}
   .brandmark .dot{width:24px;height:24px;border-radius:8px;background:var(--grad)}
   .shopchip{display:flex;align-items:center;gap:6px;font-size:11.5px;font-weight:600;color:var(--ink2);background:#fff;border:1px solid var(--line);border-radius:100px;padding:6px 12px}
   .shopchip i{width:8px;height:8px;border-radius:50%;background:#19C37D;display:inline-block}
@@ -392,11 +392,11 @@
   <aside class="side">
     <div class="side-inner">
       <div>
-        <span class="g-eyebrow">Lumi v2 · 可交互原型</span>
+        <span class="g-eyebrow">Postworth · 可交互原型</span>
         <div class="g-quote">「贴文发了，订单也来了——<br>但两者之间，一片漆黑。」<span>—— Maria，手工耳环店主（演示用户）</span></div>
       </div>
       <div>
-        <div class="g-h">v2 解决方案 · 效果闭环</div>
+        <div class="g-h">解决方案 · 效果闭环</div>
         <div class="loop">
           <span class="lp"><i>① 生成</i>自动埋好追踪<em>短链 · bio · Story · 优惠码</em></span><span class="arr">→</span>
           <span class="lp"><i>② 发布</i>一键到 Instagram<em>bio 链接自动更新</em></span><span class="arr">→</span>
@@ -436,7 +436,7 @@
         <section class="page active" id="page-create">
           <div class="pb">
             <div class="appbar">
-              <div class="brandmark"><span class="dot"></span>Lumi</div>
+              <div class="brandmark"><span class="dot"></span>Postworth</div>
               <button class="shopchip" id="shopChip" data-action="ig-manage"><i></i><span id="shopChipTxt"></span></button>
             </div>
             <h1 class="pg-title">创建贴文</h1>
@@ -454,7 +454,7 @@
                 <div class="seg" id="toneSeg"></div>
               </div>
             </div>
-            <div class="v2hint">v2 · 每条贴文自动埋好追踪：短链 · IG bio · Story · 优惠码</div>
+            <div class="v2hint">每条贴文自动埋好追踪：短链 · IG bio · Story · 优惠码</div>
             <button class="cta" id="ctaGen" data-action="generate">生成贴文</button>
             <div class="quota" id="quotaCard"></div>
           </div>
@@ -464,7 +464,7 @@
           <div class="rs-wrap">
             <div class="dashhead">
               <h1>效果</h1>
-              <button class="chatsm" data-action="open-chat" title="Lumi 助手">✦ 问助手</button>
+              <button class="chatsm" data-action="open-chat" title="Postworth 助手">✦ 问助手</button>
             </div>
             <div class="sync" id="syncLine"></div>
             <div id="rsBody"></div>
@@ -491,20 +491,20 @@
               <button class="demobtn" data-action="demo-ig"><i>🔌</i>断开 IG 连接（验证未授权状态）</button>
               <button class="demobtn" data-action="demo-reset"><i>↺</i>重置演示</button>
             </div>
-            <div class="pf-note">Lumi v2 · Part B 可交互原型 · 所有数据为 mock<br>真实产品中，额度校验与事件上报发生在服务端</div>
+            <div class="pf-note">Postworth · 可交互原型 · 所有数据为 mock<br>真实产品中，额度校验与事件上报发生在服务端</div>
           </div>
         </section>
 
         <section class="page" id="page-generate">
           <div class="genhead">
             <h1>正在生成…</h1>
-            <p>v2 · 发布前自动埋好效果追踪</p>
+            <p>发布前自动埋好效果追踪</p>
           </div>
           <div class="genlist" id="genList"></div>
           <div class="genfail" id="genFail">
             <div class="card">
               <b>生成超时（AI 服务无响应）</b>
-              <p>本次<b>未消耗额度</b>——失败不扣次数，重试即可。这是文档定义的异常规则之一。</p>
+              <p>本次<b>未消耗额度</b>——失败不扣次数，重试即可。</p>
             </div>
             <button class="cta" data-action="retry-gen">重试生成</button>
           </div>
@@ -538,7 +538,7 @@
         <section class="page" id="page-chat">
           <div class="pushbar">
             <button class="backbtn" data-action="back">‹</button>
-            <div class="pb-t"><b>Lumi 助手</b><span>效果分析 · 演示模式（回复为预设内容）</span></div>
+            <div class="pb-t"><b>Postworth 助手</b><span>效果分析 · 演示模式（回复为预设内容）</span></div>
           </div>
           <div class="chat-log" id="chatLog"></div>
           <div class="chat-input">
@@ -605,8 +605,8 @@
 
       <div class="guide" id="guide">
         <div class="guide-card">
-          <span class="g-eyebrow">Lumi v2 · 可交互原型</span>
-          <div class="g-quote">「贴文发了，订单也来了——但两者之间，一片漆黑。」<span>—— Maria，手工耳环店主。v2 要做的，就是接通这两条管道。</span></div>
+          <span class="g-eyebrow">Postworth · 可交互原型</span>
+          <div class="g-quote">「贴文发了，订单也来了——但两者之间，一片漆黑。」<span>—— Maria，手工耳环店主。Postworth 要做的，就是接通这两条管道。</span></div>
           <div class="g-h">怎么用 · 效果闭环</div>
           <div class="loop">
             <span class="lp"><i>① 生成</i>自动埋好追踪<em>短链 · bio · Story · 优惠码</em></span><span class="arr">→</span>
@@ -830,7 +830,7 @@ function onGenSuccess(){
   state.draft={
     tpl:state.template, pid:state.pid, tone:state.tone,
     caption:CAPTIONS[state.template](p), story:STORY_TXT[state.template],
-    link:'lumi.to/'+Math.random().toString(36).slice(2,6), code:'MIA15'
+    link:'postworth.to/'+Math.random().toString(36).slice(2,6), code:'MIA15'
   };
   markMs('gen'); renderQuota(); renderResult(); show('page-result');
 }
@@ -838,7 +838,7 @@ function renderResult(){
   var d=state.draft, p=PRODUCTS[d.pid];
   $('#resultQuota').textContent = state.plan==='free' ? ('本次生成成功 · 本月已用 '+quotaText()+' 次') : ('Pro · '+quotaText());
   $('#resultBody').innerHTML =
-    '<div class="result"><span class="v2tag">v2 · 自动埋链</span>'+
+    '<div class="result"><span class="v2tag">自动埋链</span>'+
       '<div class="postprev"><img src="'+p.img+'" alt=""><div class="pp-cap"><b>贴文文案已生成</b>'+d.caption+'</div></div>'+
       '<div class="storyprev"><span class="ring"><img src="'+p.img+'" alt=""></span><span class="st-t"><b>配套 Story</b><span>'+d.story+'</span></span><span class="stlink">链接贴纸</span></div>'+
       '<ul class="tracklist">'+
@@ -915,9 +915,9 @@ function renderResults(){
     insight='<div class="insight"><div class="ins-head">行动建议</div><p>《'+pending.title+'》的数据正在回传。24 小时后，这里会告诉你它带来了多少订单。</p><div class="ins-ctas"><button class="ins-btn" data-action="fast-forward">⏩ 快进 24 小时（演示）</button></div></div>';
   } else if(newReported){
     var ctr=newReported.imp?(newReported.clicks/newReported.imp*100):0;
-    insight='<div class="insight"><div class="ins-head">行动建议</div><p>《'+newReported.title+'》点击率 <b>'+ctr.toFixed(1)+'%</b>（账号均值 '+avgCtr.toFixed(1)+'%），带来 <b>'+newReported.orders+' 单 · '+fmt$(newReported.revenue)+'</b>。<b>'+newReported.tpl+' × Story</b> 组合持续有效——建议保持，并固定晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+newReported.tpl+'">按建议生成 →</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button></div></div>';
+    insight='<div class="insight"><div class="ins-head">行动建议</div><p>《'+newReported.title+'》点击率 <b>'+ctr.toFixed(1)+'%</b>（账号均值 '+avgCtr.toFixed(1)+'%），带来 <b>'+newReported.orders+' 单 · '+fmt$(newReported.revenue)+'</b>。<b>'+newReported.tpl+' × Story</b> 组合持续有效——建议保持，并固定晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+newReported.tpl+'">按建议生成 →</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Postworth 助手</button></div></div>';
   } else {
-    insight='<div class="insight"><div class="ins-head">行动建议</div><p>带 Story 的贴文下单率比纯贴文高 <b>60%</b>。下次生成建议保留 Story 组合，并优先在晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+bt+'">按建议生成（'+bt+'）→</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button></div></div>';
+    insight='<div class="insight"><div class="ins-head">行动建议</div><p>带 Story 的贴文下单率比纯贴文高 <b>60%</b>。下次生成建议保留 Story 组合，并优先在晚 8 点发布。</p><div class="ins-ctas"><button class="ins-btn" data-action="prefill-gen" data-tpl="'+bt+'">按建议生成（'+bt+'）→</button><button class="ins-btn alt" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Postworth 助手</button></div></div>';
   }
 
   var rows=state.posts.map(function(p){
@@ -978,7 +978,7 @@ function openPost(id){
       '<div class="attr-row"><span>互动数据</span><b>赞 '+p.likes+'（IG Insights）</b></div>'+
     '</div>'+
     '<div class="card sparkcard"><div class="sc-t">近 7 天点击趋势</div>'+sparkSVG(spark,'#0B8F6B')+'</div>'+
-    '<div class="dtbtns"><button class="btn-ghost" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Lumi 助手</button><button class="btn-solid" data-action="prefill-gen" data-tpl="'+p.tpl+'">按此模板再生成</button></div>';
+    '<div class="dtbtns"><button class="btn-ghost" data-action="open-chat-q" data-q="为什么月光石这条效果好？">问 Postworth 助手</button><button class="btn-solid" data-action="prefill-gen" data-tpl="'+p.tpl+'">按此模板再生成</button></div>';
   show('page-detail');
 }
 
