@@ -6,7 +6,7 @@ Postworth 是一款面向独立卖家与小微商家的 Instagram 内容营销�
 
 这份仓库是它的**高保真可交互原型**，纯前端单文件 H5，打开即可完整体验从生成、发布、数据回传到付费升级的效果闭环。
 
-**在线演示**：https://timedetective.github.io/lumi-prototype/
+**在线演示**：https://timedetective.github.io/postworth-prototype/
 
 ---
 
@@ -63,8 +63,8 @@ Postworth 的答案：**每条贴文自动埋点（追踪短链 / bio 轮换 / �
 无需安装任何依赖，克隆后双击打开即可：
 
 ```bash
-git clone https://github.com/TimeDetective/lumi-prototype.git
-cd lumi-prototype
+git clone https://github.com/TimeDetective/postworth-prototype.git
+cd postworth-prototype
 open index.html   # 或用 Chrome / Safari 直接打开
 ```
 
