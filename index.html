@@ -483,7 +483,7 @@
             <div class="card plancard" id="planCard"></div>
             <div class="sect">连接</div>
             <div class="card pfrow" id="igCard"></div>
-            <div class="sect">演示控制（评委快进用）</div>
+            <div class="sect">演示控制</div>
             <div class="card demo-grid">
               <button class="demobtn" data-action="open-guide"><i>📖</i>完整演示指引（效果闭环 · 演示动线）</button>
               <button class="demobtn" data-action="demo-quota"><i>⏩</i>快进：额度用完 → 直接体验付费墙</button>
@@ -973,7 +973,7 @@ function openPost(id){
       fnRow('订单',''+p.orders,'店铺匹配 · 实时','实时',w3)+
     '</div>'+
     '<div class="card attr">'+
-      '<div class="attr-row"><span>短链订单（'+p.link+'）</span><b>'+(p.orders-p.codeOrders)+' 单 · 7 天点击窗口</b></div>'+
+      '<div class="attr-row"><span>短链订单（'+(p.link||'postworth.to/93rk')+'）</span><b>'+(p.orders-p.codeOrders)+' 单 · 7 天点击窗口</b></div>'+
       '<div class="attr-row"><span>优惠码订单（'+(p.code||'MIA15')+'）</span><b>'+p.codeOrders+' 单 · DM 报码即归因</b></div>'+
       '<div class="attr-row"><span>互动数据</span><b>赞 '+p.likes+'（IG Insights）</b></div>'+
     '</div>'+
